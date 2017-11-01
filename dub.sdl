@@ -1,0 +1,7 @@
+name "sdrip"
+description "A minimal D application."
+authors "Christian Köstlin"
+copyright "Copyright © 2017, Christian Köstlin"
+license "proprietary"
+dependency "undead" version="~>1.0.9"
+dependency "vibe-d" version="~>0.8.1"
