@@ -173,17 +173,18 @@ class Sin : Renderer
                 receive(
                     (Tid sender, Render request)
                     {
+                        info("");
                         sender.send(request.Result(impl.render));
                     },
                     (Tid sender, GetProperties request)
                     {
-                        sender.send(request.Result(impl.properties));
+                        info("");
+                        sender.send(GetProperties.Result(impl.properties));
                     },
                     (Tid sender, SetProperties request)
                     {
-                        with (request) {
-                            sender.send(Result(impl.apply(path, value)));
-                        }
+                        info("");
+                        sender.send(request.Result(impl.apply(request.path, request.value)));
                     },
                     (Tid sender, Shutdown request)
                     {

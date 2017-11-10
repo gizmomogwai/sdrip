@@ -28,21 +28,16 @@ abstract class Strip
 
     Strip set(uint idx, Color p)
     {
-        auto i = idx * 4;
-        ledBuffer[i] = p.a;
-        ledBuffer[i + 1] = p.b;
-        ledBuffer[i + 2] = p.g;
-        ledBuffer[i + 3] = p.r;
-        return this;
+        return set(idx, p.a, p.r, p.g, p.b);
     }
 
     Strip set(uint idx, ubyte a, ubyte r, ubyte g, ubyte b)
     {
         auto i = idx * 4;
         ledBuffer[i] = a;
-        ledBuffer[i + 1] = b;
+        ledBuffer[i + 1] = r;
         ledBuffer[i + 2] = g;
-        ledBuffer[i + 3] = r;
+        ledBuffer[i + 3] = b;
         return this;
     }
 

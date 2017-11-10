@@ -61,7 +61,8 @@ class Profiles
     {
         if (current !is null)
         {
-            current.renderer.send(thisTid, Shutdown());
+
+            current.renderer.shutdownAndWait();
             current = null;
         }
     }

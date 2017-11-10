@@ -17,8 +17,12 @@ class WebInterface
     {
         import vibe.vibe;
 
+        try {
         info("WebInterface:get");
         render!("index.dt", profiles);
+        } catch (Exception e) {
+            error(e);
+        }
     }
 
     void postShutdown()
