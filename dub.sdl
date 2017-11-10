@@ -5,3 +5,22 @@ copyright "Copyright © 2017, Christian Köstlin"
 license "proprietary"
 dependency "undead" version="~>1.0.9"
 dependency "vibe-d" version="~>0.8.1"
+dependency "dyaml" version="~>0.6.3"
+dependency "mir-algorithm" version="~>0.7.0-alpha8"
+
+libs "dotstar"
+targetType "executable"
+
+mainSourceFile "source/app.d"
+
+configuration "application-osx" {
+  platforms "osx"
+  targetPath "out/osx"
+  lflags "-Lout/osx"
+}
+
+configuration "application-raspi" {
+  platforms "arm"
+  targetPath "out/raspi"
+  lflags "-Lout/raspi"
+}

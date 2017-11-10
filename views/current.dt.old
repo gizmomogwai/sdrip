@@ -1,0 +1,6 @@
+
+      form(action="/set", method="post")
+        - foreach (p; profiles.current.generator.properties)
+          p !{p.toHtml()}
+          br
+        input(type="submit", value="apply", style="height:100px; width:500px")

@@ -1,0 +1,51 @@
+-import std.string;
+-import std.stdio;
+doctype html
+html
+  head
+    title Current profile
+    include jquery
+    include bootstrap
+  body
+    h1
+      a(href="/") back to index
+    h1 Current profile
+    - if (profiles.current)
+      h2 #{profiles.current.name}
+      form(action="/set", method="post")
+        - foreach (p; profiles.current.properties)
+          p !{p.toHtml()}
+          br
+        input(type="submit", value="apply", style="height:100px; width:500px")
+    script(type="text/javascript").
+      function resetToDefault(name) {
+        var v = $("input[name=" + name + "]");
+        v.attr("value", (v.attr("defaultvalue")))
+      }
+      function resetRadio(name) {
+        var inputs = $("input[name=" + name + "]");
+        inputs.each(function(index) {
+          var checked = $(this).attr("value") == $(this).attr("defaultvalue");
+          if (checked) {
+            $(this).attr("checked", "checked");
+          } else {
+            $(this).removeAttr("checked");
+          }
+        });
+      }
+      $("input[defaultvalue]").each(function(index) {
+        var name = $(this).attr('name');
+        var type = $(this).attr("type");
+        if (type != "radio") {
+          var h = "<input value=\"reset\" type=\"submit\" onclick=\"resetToDefault('" + name + "');\" />";
+          console.log("resetting");
+          $(this).after(h)
+        }
+      });
+      $("table.radio").each(function(index) {
+        var name = $(this).attr('name');
+        var h = "<input value=\"reset\" type=\"submit\" onclick=\"resetRadio('" + name + "');\" />";
+        $(this).after(h);
+      });
+
+    include footer

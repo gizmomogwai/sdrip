@@ -1,0 +1,13 @@
+doctype html
+html
+  head
+    title& welcome
+    include jquery
+    include bootstrap
+  body
+    h1& welcome
+    - foreach (generator; profiles.generators)
+      form(action="/activate", method="POST")
+        input(type="hidden", name="name", value="#{generator.name}")
+        input(type="submit", value="#{generator.name}", style="height:100px; width:500px")
+  include footer
