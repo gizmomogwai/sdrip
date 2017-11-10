@@ -42,7 +42,6 @@ class Profiles
 
         if (current !is null)
         {
-            info("shutting down currently running thing");
             current.renderer.send(thisTid, Shutdown());
             current = null;
         }
@@ -55,9 +54,9 @@ class Profiles
     {
         if (current !is null)
         {
-            current.renderer.shutdownAndWait;
+            current.renderer.shutdownAndWait();
         }
-        renderer.shutdownAndWait;
+        renderer.shutdownAndWait();
     }
 }
 

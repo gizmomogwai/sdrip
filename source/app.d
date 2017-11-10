@@ -18,8 +18,10 @@ import messages;
 import core.time;
 import prefs;
 
-Strip createStrip(uint nrOfLeds, immutable(Prefs) settings) {
-    if (settings.get("tcpstrip") != "") {
+Strip createStrip(uint nrOfLeds, immutable(Prefs) settings)
+{
+    if (settings.get("tcpstrip") != "")
+    {
         auto host = settings.get("tcpstrip");
         info("tcpstrip: ", host);
         return new TcpStrip(nrOfLeds, host);
@@ -33,7 +35,12 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
     try
     {
         import dotstar;
+
         auto strip = createStrip(nrOfLeds, settings);
+        scope (exit)
+        {
+            strip.close();
+        }
         bool finished = false;
         Tid generator;
         bool hasGenerator = false;
@@ -74,7 +81,8 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
                     hasGenerator = true;
                 },
                 (Tid sender, Shutdown s) {
-                    info("rendere received shutdown");
+                    info("received shutdown");
+                    sender.send(s.Result());
                     finished = true;
                 },
                 (OwnerTerminated t) {
@@ -88,33 +96,26 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
     {
         error(e);
     }
-
 }
 
 int main(string[] args)
 {
+    import miditest;
+    import std.process;
+    import tcpreceiver;
+    import vibe.core.core : runApplication;
     import vibe.http.router;
     import vibe.http.server;
-    import vibe.core.core : runApplication;
     import vibe.web.web;
-    import std.process;
+
     if (args.length >= 2)
     {
         switch (args[1])
         {
         case "miditest":
-            {
-
-                import miditest;
-
-                return miditest.miditest(args.remove(1));
-            }
+            return miditest.miditest(args.remove(1));
         case "tcpreceiver":
-            {
-                import tcpreceiver;
-
-                return tcpreceiver.receive(args.remove(1));
-            }
+            return tcpreceiver.receive(args.remove(1));
         default:
             error("unknown argument ", args[1]);
             return 1;
@@ -122,7 +123,9 @@ int main(string[] args)
     }
 
     import prefs;
-    auto settings = prefs.load("settings.yaml", "settings.yaml.%s".format(execute("hostname").output.strip));
+
+    auto settings = prefs.load("settings.yaml",
+            "settings.yaml.%s".format(execute("hostname").output.strip));
     auto nrOfLeds = settings.get("nr_of_leds").to!uint;
     Tid renderer = spawnLinked(&renderLoop, nrOfLeds, settings);
     // dfmt off
@@ -146,6 +149,7 @@ int main(string[] args)
 
     runApplication();
 
-    profiles.shutdown();
+    std.concurrency.receive((LinkTerminated t) { writeln("renderloop finished"); });
+
     return 0;
 }

@@ -5,6 +5,8 @@ import std.socket;
 import dotstar;
 import std.experimental.logger;
 import prefs;
+import std.conv;
+
 int receive(string[] args)
 {
 
@@ -17,30 +19,35 @@ int receive(string[] args)
     server.bind(new InternetAddress(55555));
     server.listen(1);
 
-
     while (true)
     {
-        try {
+        try
+        {
             info("waiting for next client");
             auto client = server.accept();
             auto stream = new SocketStream(client);
             stream.write(nrOfLeds);
-            ubyte[] data = new ubyte[nrOfLeds*4];
-            while (true) {
+            ubyte[] data = new ubyte[nrOfLeds * 4];
+            while (true)
+            {
                 auto read = stream.read(data);
-                if (read == 0) {
+                if (read == 0)
+                {
                     break;
                 }
 
-                for (int idx=0; idx<nrOfLeds; ++idx) {
+                for (int idx = 0; idx < nrOfLeds; ++idx)
+                {
                     auto i = idx * 4;
-                    strip.set(idx, data[i], data[i+1], data[i+2], data[i+3]);
+                    strip.set(idx, data[i], data[i + 1], data[i + 2], data[i + 3]);
                 }
                 info(".");
                 strip.refresh();
             }
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             error(e);
         }
     }

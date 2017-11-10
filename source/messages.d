@@ -26,6 +26,9 @@ struct SetProperties
 
 struct Shutdown
 {
+    struct Result
+    {
+    }
 }
 
 struct Note
@@ -46,10 +49,18 @@ struct Render
 
 import std.concurrency : Tid;
 
-void shutdownAndWait(Tid tid)
+void shutdownChild(Tid tid)
 {
     import std.concurrency;
 
     tid.send(thisTid, Shutdown());
     receive((LinkTerminated l) {  });
+}
+
+void shutdownAndWait(Tid tid)
+{
+    import std.concurrency;
+
+    tid.send(thisTid, Shutdown());
+    receive((Shutdown.Result r) {  });
 }

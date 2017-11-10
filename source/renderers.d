@@ -185,6 +185,11 @@ class Sin : Renderer
                             sender.send(Result(impl.apply(path, value)));
                         }
                     },
+                    (Tid sender, Shutdown request)
+                    {
+                        finished = true;
+                        sender.send(request.Result());
+                    },
                     (OwnerTerminated t)
                     {
                         info("render received OwnerTerminated");

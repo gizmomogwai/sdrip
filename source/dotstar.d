@@ -1,9 +1,11 @@
 module dotstar;
 
-import std.string;
 import core.thread;
 import std.conv;
 import std.experimental.logger;
+import std.socket;
+import std.string;
+import undead.socketstream;
 
 extern (C)
 {
@@ -23,6 +25,7 @@ abstract class Strip
     {
         this.ledBuffer = new ubyte[nrOfLeds * 4];
     }
+
     Strip set(uint idx, Color p)
     {
         auto i = idx * 4;
@@ -32,15 +35,17 @@ abstract class Strip
         ledBuffer[i + 3] = p.r;
         return this;
     }
+
     Strip set(uint idx, ubyte a, ubyte r, ubyte g, ubyte b)
     {
         auto i = idx * 4;
         ledBuffer[i] = a;
-        ledBuffer[i+1] = b;
-        ledBuffer[i+2] = g;
-        ledBuffer[i+3] = r;
+        ledBuffer[i + 1] = b;
+        ledBuffer[i + 2] = g;
+        ledBuffer[i + 3] = r;
         return this;
     }
+
     uint size()
     {
         return cast(uint) this.ledBuffer.length / 4;
@@ -48,12 +53,10 @@ abstract class Strip
 
     public void print()
     {
-        import std.stdio;
-
         for (int i = 0; i < 1; ++i)
         {
             auto idx = i * 4;
-            writeln("%d %d %d %d".format(ledBuffer[idx], ledBuffer[idx + 1],
+            info("%d %d %d %d".format(ledBuffer[idx], ledBuffer[idx + 1],
                     ledBuffer[idx + 2], ledBuffer[idx + 3]));
         }
     }
@@ -86,8 +89,9 @@ abstract class Strip
     }
 
     abstract Strip refresh();
-
+    abstract void close();
 }
+
 class SpiStrip : Strip
 {
     Spi* spi;
@@ -107,32 +111,43 @@ class SpiStrip : Strip
         return this;
     }
 
+    override void close()
+    {
+        destroySpi(spi);
+    }
 }
-import undead.socketstream;
-import std.string;
-import std.socket;
 
-class TcpStrip : Strip {
+class TcpStrip : Strip
+{
 
     SocketStream stream;
-    this(uint nrOfLeds, string host) {
+    this(uint nrOfLeds, string host)
+    {
         super(nrOfLeds);
-        auto s = new TcpSocket(getAddress(host, cast(ushort)55555)[0]);
+        auto s = new TcpSocket(getAddress(host, cast(ushort) 55555)[0]);
         stream = new SocketStream(s);
         uint ledsOnOtherSide;
         stream.read(ledsOnOtherSide);
-        if (ledsOnOtherSide != nrOfLeds) {
-            throw new Exception("remote led has %s leds but local one has %s".format(ledsOnOtherSide, nrOfLeds));
+        if (ledsOnOtherSide != nrOfLeds)
+        {
+            throw new Exception("remote led has %s leds but local one has %s".format(ledsOnOtherSide,
+                    nrOfLeds));
         }
-        info(__PRETTY_FUNCTION__, " connected to ", host, " with ", nrOfLeds, " leds");
+        info(__MODULE__, ":", __PRETTY_FUNCTION__, ":", __LINE__,
+                " connected to ", host, " with ", nrOfLeds, " leds");
     }
 
-    override Strip refresh() {
+    override Strip refresh()
+    {
         info("refreshing");
         stream.write(ledBuffer);
         return this;
     }
 
+    override void close()
+    {
+        stream.close();
+    }
 }
 
 struct Color

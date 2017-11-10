@@ -21,8 +21,12 @@ class WebInterface
         render!("index.dt", profiles);
     }
 
-    void getShutdown()
+    void postShutdown()
     {
+        info("shutting down");
+        profiles.shutdown();
+        info("shutting down complete ... killing event loop");
+
         exitEventLoop();
     }
 
