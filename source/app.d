@@ -148,7 +148,8 @@ int main(string[] args)
     auto listener = listenHTTP(httpSettings, router);
 
     runApplication();
-
+    info("vibe application finished");
+    profiles.shutdown();
     std.concurrency.receive((LinkTerminated t) { writeln("renderloop finished"); });
 
     return 0;

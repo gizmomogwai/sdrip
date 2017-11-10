@@ -28,8 +28,10 @@ static withDefault(T)(T value, T defaultValue)
 class Profiles
 {
     Tid renderer;
+    bool shutdownSent = false;
     Renderer[] generators;
     Renderer current;
+
     this(Tid renderer, Renderer[] generators)
     {
         this.renderer = renderer;
@@ -39,12 +41,7 @@ class Profiles
 
     void activate(string name)
     {
-
-        if (current !is null)
-        {
-            current.renderer.send(thisTid, Shutdown());
-            current = null;
-        }
+        clearCurrent();
 
         current = generators.findBy!(a => a.name)(name).front;
         renderer.send(SetGenerator(), current.start());
@@ -52,11 +49,21 @@ class Profiles
 
     public void shutdown()
     {
+        clearCurrent();
+
+        if (!shutdownSent)
+        {
+            renderer.shutdownAndWait();
+            shutdownSent = true;
+        }
+    }
+    private void clearCurrent()
+    {
         if (current !is null)
         {
-            current.renderer.shutdownAndWait();
+            current.renderer.send(thisTid, Shutdown());
+            current = null;
         }
-        renderer.shutdownAndWait();
     }
 }
 
