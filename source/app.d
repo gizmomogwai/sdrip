@@ -32,6 +32,19 @@ Strip createStrip(uint nrOfLeds, immutable(Prefs) settings)
 
 void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
 {
+    // dfmt off
+    auto profiles = new Profiles(thisTid,
+        [
+            new Sin("sin", nrOfLeds, Color(255, 0, 0), 2f, 1f),
+            new Sum("sum", nrOfLeds,
+                [
+                    new Sin("sin1", nrOfLeds, Color(255, 0, 0), 2f, 0.3f),
+                    new Sin("sin2", nrOfLeds, Color(0, 255, 0), 3, -0.3f)
+                 ]),
+            new Midi("midi", nrOfLeds, settings),
+         ]);
+    // dfmt on
+
     try
     {
         import dotstar;
@@ -42,8 +55,9 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
             strip.close();
         }
         bool finished = false;
-        Tid generator;
-        bool hasGenerator = false;
+        Tid renderer;
+        string rendererName;
+        bool hasRenderer = false;
         while (!finished)
         {
             import std.stdio;
@@ -53,12 +67,17 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
             std.datetime.stopwatch.StopWatch sw;
             sw.reset();
             sw.start();
-            if (hasGenerator)
+            if (hasRenderer)
             {
-                generator.send(thisTid, Render());
+                renderer.send(thisTid, Render());
             }
             // dfmt off
             receive(
+                (Tid sender, Index index)
+                {
+                    info("index");
+                    sender.send(Index.Result(Index.Result.Data(rendererName,profiles.renderers.map!(p => p.name).array)));
+                },
                 (Render.Result result)
                 {
                     try {
@@ -74,20 +93,41 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
                         error("error ", t);
                     }
                 },
-                (SetGenerator setGenerator, Tid tid)
+                (SetRenderer setRenderer, Tid tid, string name)
                 {
-                    info("new generator");
-                    generator = tid;
-                    hasGenerator = true;
+                    info("new renderer");
+                    renderer = tid;
+                    rendererName = name;
+                    hasRenderer = true;
+                },
+                (Tid sender, Activate request) {
+                    profiles.activate(request.name);
+                    sender.send(request.Result(true));
+                },
+                (Tid sender, GetCurrent request) {
+                    sender.send(request.Result(rendererName));
+                },
+                (Tid sender, GetProperties request) {
+                    renderer.send(sender, request);
                 },
                 (Tid sender, Shutdown s) {
                     info("received shutdown");
                     sender.send(s.Result());
                     finished = true;
                 },
+                (Tid sender, Apply apply)
+                {
+                    renderer.send(sender, apply);
+                },
                 (OwnerTerminated t) {
                     info("renderer owner terminated");
                     finished = true;
+                },
+                (LinkTerminated lt) {
+                    info("link terminated ", lt);
+                },
+                (Variant v) {
+                    error("unknown message received: ", v);
                 });
             // dfmt on
         }
@@ -128,20 +168,8 @@ int main(string[] args)
             "settings.yaml.%s".format(execute("hostname").output.strip));
     auto nrOfLeds = settings.get("nr_of_leds").to!uint;
     Tid renderer = spawnLinked(&renderLoop, nrOfLeds, settings);
-    // dfmt off
-    auto profiles = new Profiles(renderer,
-        [
-            new Sin("sin", nrOfLeds, Color(255, 0, 0), 2f, 1f),
-            new Sum("sum", nrOfLeds,
-                    [
-                        new Sin("sin1", nrOfLeds, Color(255, 0, 0), 2f, 0.3f),
-                        new Sin("sin2", nrOfLeds, Color(0, 255, 0), 3, -0.3f)
-                     ]),
-            new Midi("midi", nrOfLeds, settings),
-         ]);
-    // dfmt on
     auto router = new URLRouter();
-    router.registerWebInterface(new WebInterface(profiles));
+    router.registerWebInterface(new WebInterface(renderer));
 
     auto httpSettings = new HTTPServerSettings;
     httpSettings.port = 4567;
@@ -149,7 +177,7 @@ int main(string[] args)
 
     runApplication();
     info("vibe application finished");
-    profiles.shutdown();
+
     std.concurrency.receive((LinkTerminated t) { writeln("renderloop finished"); });
 
     return 0;

@@ -10,10 +10,10 @@ html
     h1
       a(href="/") back to index
     h1 Current profile
-    - if (profiles.current)
-      h2 #{profiles.current.name}
+    - if (name)
+      h2 #{name}
       form(action="/set", method="post")
-        - foreach (p; profiles.current.properties)
+        - foreach (p; properties)
           p !{p.toHtml()}
           br
         input(type="submit", value="apply", style="height:100px; width:500px")

@@ -6,10 +6,12 @@ html
     include bootstrap
   body
     h1& welcome
-    - foreach (generator; profiles.generators)
-      form(action="/activate", method="POST")
-        input(type="hidden", name="name", value="#{generator.name}")
-        input(type="submit", value="#{generator.name}", style="height:100px; width:500px")
-    form(action="/shutdown", method="POST")
-      input(type="submit", value="Shutdown", style="height:100px; width:500px")
+    h1& current profile:
+      a(href="/current") #{name}
+    - foreach (r; renderer)
+      form(action="/activate", method="post")
+        input(type="hidden", name="name", value="#{r}")
+        input(type="submit", value="#{r}", style="height:100px; width:500px")
+    form(action="/shutdown", method="post")
+      input(type="submit", value="shutdown", style="height:100px; width:500px")
   include footer

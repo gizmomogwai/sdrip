@@ -134,7 +134,6 @@ class TcpStrip : Strip
 
     override Strip refresh()
     {
-        info("refreshing");
         stream.write(ledBuffer);
         return this;
     }

@@ -3,24 +3,34 @@ module webinterface;
 import sdrip;
 import vibe.vibe;
 import std.experimental.logger;
+import messages;
 
 class WebInterface
 {
 
-    Profiles profiles;
-    this(Profiles profiles)
+    Tid theRenderer;
+    this(Tid renderer)
     {
-        this.profiles = profiles;
+        this.theRenderer = renderer;
     }
 
     void get()
     {
         import vibe.vibe;
-
-        try {
-        info("WebInterface:get");
-        render!("index.dt", profiles);
-        } catch (Exception e) {
+        error("-------------------------------------");
+        try
+        {
+            trace("Index");
+            auto index = theRenderer.sendReceive!Index;
+            trace("Index");
+            auto name = index.current;
+            trace("Index");
+            auto renderer = index.renderer;
+            trace("Index");
+            render!("index.dt", name, renderer);
+        }
+        catch (Exception e)
+        {
             error(e);
         }
     }
@@ -28,7 +38,7 @@ class WebInterface
     void postShutdown()
     {
         info("shutting down");
-        profiles.shutdown();
+        theRenderer.shutdownAndWait();
         info("shutting down complete ... killing event loop");
 
         exitEventLoop();
@@ -40,7 +50,8 @@ class WebInterface
         foreach (k, v; request.form)
         {
             trace(k, " -> ", v);
-            if (profiles.current.apply(k.split(".").idup, v))
+            auto result = theRenderer.sendReceive!Apply(k.split(".").idup, v);
+            if (result)
             {
                 trace("set %s to %s OK".format(k, v));
             }
@@ -51,17 +62,25 @@ class WebInterface
         }
         renderCurrent();
     }
-    /*
-      void getCurrent()
-      {
-      info("WebInterface:getCurrent");
-      renderCurrent();
-      }
-    */
+
+    void getCurrent()
+    {
+        info("WebInterface:getCurrent");
+        try
+        {
+
+            renderCurrent();
+        }
+        catch (Exception e)
+        {
+            error(e);
+        }
+    }
+
     void postActivate(string name)
     {
         info("WebInterface:postActivate ", name);
-        profiles.activate(name);
+        theRenderer.sendReceive!Activate(name);
         renderCurrent();
     }
 
@@ -71,7 +90,9 @@ class WebInterface
 
         try
         {
-            render!("current.dt", profiles);
+            auto name = theRenderer.sendReceive!GetCurrent;
+            auto properties = theRenderer.sendReceive!(GetProperties)(Prefix());
+            render!("current.dt", name, properties);
         }
         catch (Throwable t)
         {

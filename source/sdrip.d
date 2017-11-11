@@ -29,22 +29,22 @@ class Profiles
 {
     Tid renderer;
     bool shutdownSent = false;
-    Renderer[] generators;
+    Renderer[] renderers;
     Renderer current;
 
-    this(Tid renderer, Renderer[] generators)
+    this(Tid renderer, Renderer[] renderers)
     {
         this.renderer = renderer;
-        this.generators = generators;
-        activate(generators[0].name);
+        this.renderers = renderers;
+        activate(renderers[0].name);
     }
 
     void activate(string name)
     {
         clearCurrent();
 
-        current = generators.findBy!(a => a.name)(name).front;
-        renderer.send(SetGenerator(), current.start());
+        current = renderers.findBy!(a => a.name)(name).front;
+        renderer.send(SetRenderer(), current.start(), name);
     }
 
     public void shutdown()
@@ -57,6 +57,7 @@ class Profiles
             shutdownSent = true;
         }
     }
+
     private void clearCurrent()
     {
         if (current !is null)
@@ -87,19 +88,6 @@ class Renderer
     }
 
     protected abstract Tid internalStart();
-
-    public immutable(Property)[] properties()
-    {
-        info("props");
-        auto res = renderer.sendReceive!(GetProperties);
-        return res;
-    }
-
-    bool apply(immutable(string)[] path, string value)
-    {
-        info("apply");
-        return renderer.sendReceive!(SetProperties)(path, value);
-    }
 }
 
 import std.traits : Fields;
@@ -107,7 +95,11 @@ import std.traits : Fields;
 auto sendReceive(Request)(Tid to, Fields!Request parameters)
 {
     to.send(thisTid, Request(parameters));
-    return (receiveOnly!(Request.Result)).result;
+    Request.Result res;
+    receive((Request.Result r) {
+            res = r;
+        });
+    return res.result;
 }
 
 class Property

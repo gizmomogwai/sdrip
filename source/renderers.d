@@ -15,17 +15,29 @@ import prefs;
 
 class RendererImpl
 {
+    string name;
+    uint nrOfLeds;
     bool active;
-
+    this(string name, uint nrOfLeds) {
+        this.name = name;
+        this.nrOfLeds = nrOfLeds;
+    }
     public abstract immutable(Color)[] render();
-    public abstract immutable(Property)[] properties();
+    public abstract immutable(Property)[] properties(Prefix prefix);
     public bool apply(immutable(string)[] path, string value)
     {
-        if (path.length == 1 && "active" == path[0])
-        {
+        if (path.length != 2) {
+            return false;
+        }
+        if (path[0] != name) {
+            return false;
+        }
+
+        if (path[1] == "active") {
             active = value.to!bool;
             return true;
         }
+
         return false;
     }
 }
@@ -78,6 +90,76 @@ class Dummy : Renderer
     }
 }
 
+static class SinImpl : RendererImpl
+{
+    import std.math;
+
+    WithDefault!Color color;
+    WithDefault!float frequency;
+    WithDefault!float velocity;
+    float phase;
+
+    this(string name, uint nrOfLeds, WithDefault!Color color,
+         WithDefault!float frequency, WithDefault!float velocity)
+    {
+        super(name, nrOfLeds);
+        this.nrOfLeds = nrOfLeds;
+        this.color = color;
+        this.frequency = frequency;
+        this.velocity = velocity;
+        this.phase = 0f;
+    }
+
+    auto floatToColor(float f)
+    {
+        return Color(cast(ubyte)(f * color.value.r),
+                     cast(ubyte)(f * color.value.g), cast(ubyte)(f * color.value.b));
+    }
+
+    public override immutable(Color)[] render()
+    {
+        phase += velocity.value;
+        // dfmt off
+        return iota(0, nrOfLeds)
+            .map!(x => (sin((x * frequency.value + phase) / nrOfLeds * 2 * PI) + 1) / 2)
+            .map!(x => floatToColor(x))
+            .array
+            .idup;
+        // dfmt on
+    }
+
+    public override immutable(Property)[] properties(Prefix prefix)
+    {
+        Property[] res;
+        res ~= new ColorProperty(prefix.add("color").to!string, color);
+        return cast(immutable(Property)[]) res;
+    }
+
+    public override bool apply(immutable(string)[] path, string value)
+    {
+        if (super.apply(path, value))
+        {
+            return true;
+        }
+
+        if (path.length != 2) {
+            return false;
+        }
+        if (path[0] != name) {
+            return false;
+        }
+
+        if (path[1] == "color") {
+            color.value = value.to!Color;
+            return true;
+        }
+
+        warning("%s†%s not supported".format(__MODULE__, path));
+        return false;
+    }
+
+}
+
 class Sin : Renderer
 {
     WithDefault!Color color;
@@ -96,105 +178,46 @@ class Sin : Renderer
         return spawnLinked(&render, name, nrOfLeds, color, frequency, velocity);
     }
 
-    static class SinImpl : RendererImpl
-    {
-        import std.math;
-
-        uint nrOfLeds;
-        WithDefault!Color color;
-        WithDefault!float frequency;
-        WithDefault!float velocity;
-        float phase;
-
-        this(uint nrOfLeds, WithDefault!Color color,
-                WithDefault!float frequency, WithDefault!float velocity)
-        {
-            this.nrOfLeds = nrOfLeds;
-            this.color = color;
-            this.frequency = frequency;
-            this.velocity = velocity;
-            this.phase = 0f;
-        }
-
-        auto floatToColor(float f)
-        {
-            return Color(cast(ubyte)(f * color.value.r),
-                    cast(ubyte)(f * color.value.g), cast(ubyte)(f * color.value.b));
-        }
-
-        public override immutable(Color)[] render()
-        {
-            phase += velocity.value;
-            // dfmt off
-            return iota(0, nrOfLeds)
-                .map!(x => (sin((x * frequency.value + phase) / nrOfLeds * 2 * PI) + 1) / 2)
-                .map!(x => floatToColor(x))
-                .array
-                .idup;
-            // dfmt on
-        }
-
-        public override immutable(Property)[] properties()
-        {
-            Property[] res;
-            res ~= new ColorProperty("color", color);
-            return cast(immutable(Property)[]) res;
-        }
-
-        public override bool apply(immutable(string)[] path, string value)
-        {
-            if (super.apply(path, value))
-            {
-                return true;
-            }
-
-            if (path.length == 1 && "color" == path[0])
-            {
-                color.value = value.to!Color;
-                return true;
-            }
-
-            warning("renderes†%s not supported".format(path));
-            return false;
-        }
-
-    }
-
     static void render(string name, uint nrOfLeds, WithDefault!Color color,
-            WithDefault!float frequency, WithDefault!float velocity)
+                       WithDefault!float frequency, WithDefault!float velocity)
     {
         try
         {
-            auto impl = new SinImpl(nrOfLeds, color, frequency, velocity);
+            auto impl = new SinImpl(name, nrOfLeds, color, frequency, velocity);
             bool finished = false;
             while (!finished)
             {
                 // dfmt off
                 receive(
+                    (Tid sender, GetName request)
+                    {
+                        sender.send(request.Result(name));
+                    },
                     (Tid sender, Render request)
                     {
-                        info("");
                         sender.send(request.Result(impl.render));
                     },
                     (Tid sender, GetProperties request)
                     {
-                        info("");
-                        sender.send(GetProperties.Result(impl.properties));
-                    },
-                    (Tid sender, SetProperties request)
-                    {
-                        info("");
-                        sender.send(request.Result(impl.apply(request.path, request.value)));
+                        auto res = impl.properties(request.prefix.add(name));
+                        sender.send(request.Result(res));
                     },
                     (Tid sender, Shutdown request)
                     {
                         finished = true;
                         sender.send(request.Result());
                     },
+                    (Tid sender, Apply request)
+                    {
+                        sender.send(request.Result(impl.apply(request.path, request.value)));
+                    },
                     (OwnerTerminated t)
                     {
                         info("render received OwnerTerminated");
                         finished = true;
+                    },
+                    (Variant v) {
+                        error("Unknown message received: ", v);
                     });
                 // dfmt on
 
@@ -254,16 +277,16 @@ class Midi : Renderer
         {
             // dfmt off
             gotSomething = receiveTimeout(0.msecs,
-                (Tid tid, Shutdown s)
-                {
-                    info("shutting down connection to server");
-                    res = true;
-                },
-                (OwnerTerminated t)
-                {
-                    info("communicateToServer received OwnerTerminated");
-                    res = true;
-                });
+                                          (Tid tid, Shutdown s)
+                                          {
+                                              info("shutting down connection to server");
+                                              res = true;
+                                          },
+                                          (OwnerTerminated t)
+                                          {
+                                              info("communicateToServer received OwnerTerminated");
+                                              res = true;
+                                          });
             // dfmt on
         }
         return res;
@@ -387,12 +410,12 @@ class Midi : Renderer
                         auto interpolator = linear!float(x.sliced, y.sliced);
 
                         sender.send(request.Result(
-                                iota(0, nrOfLeds)
-                                .map!(i => i.to!float)
-                                .map!(f => f / nrOfLeds * notes.length) // nrOfLeds 120, keys 87
-                                .map!(f => interpolator(f))
-                                .map!(f => floatToColor(f))
-                                .array.idup));
+                                        iota(0, nrOfLeds)
+                                        .map!(i => i.to!float)
+                                        .map!(f => f / nrOfLeds * notes.length) // nrOfLeds 120, keys 87
+                                        .map!(f => interpolator(f))
+                                        .map!(f => floatToColor(f))
+                                        .array.idup));
                     }
                     catch (Throwable t)
                     {
@@ -433,9 +456,6 @@ class Sum : Renderer
 
     public override Tid internalStart()
     {
-        import std.stdio;
-
-        writeln(__PRETTY_FUNCTION__);
         auto childrenTids = children.map!(child => child.start).array;
         return spawnLinked(&render, name, nrOfLeds, cast(immutable(Tid)[])(childrenTids));
     }
@@ -444,7 +464,7 @@ class Sum : Renderer
     {
         try
         {
-            auto impl = new SumImpl(nrOfLeds, children);
+            auto impl = new SumImpl(name, nrOfLeds, children);
             bool finished = false;
             while (!finished)
             {
@@ -452,27 +472,26 @@ class Sum : Renderer
                 receive(
                     (Tid sender, Render request)
                     {
-                        writeln(__PRETTY_FUNCTION__);
-                        sender.send(request.Result(impl.render));
+                        sender.send(Render.Result(impl.render));
                     },
                     (Tid sender, GetProperties request)
                     {
-                        //    sender.send(request.Result(impl.properties));
+                        sender.send(request.Result(impl.properties(request.prefix.add(name))));
                     },
-                    (Tid sender, SetProperties request)
+                    (Tid sender, Apply apply)
                     {
-                        /*
-                        with (request) {
-                            sender.send(Result(impl.apply(path, value)));
-                        }
-                        */
+                        info("");
+                        sender.send(Apply.Result(impl.apply(apply.path, apply.value)));
                     },
                     (OwnerTerminated t)
                     {
                         /*
-                        info("render received OwnerTerminated");
-                        finished = true;
+                          info("render received OwnerTerminated");
+                          finished = true;
                         */
+                    },
+                    (Variant v) {
+                        error("cannot work with ", v);
                     });
                 // dfmt on
 
@@ -486,71 +505,88 @@ class Sum : Renderer
         }
     }
 
-    static class SumImpl : RendererImpl
+
+}
+
+static class SumImpl : RendererImpl
+{
+    import std.math;
+
+    immutable(Tid)[] children;
+    Color[] colors;
+
+    this(string name, uint nrOfLeds, immutable(Tid)[] children)
     {
-        import std.math;
+        super(name, nrOfLeds);
+        this.name = name;
+        this.children = children;
+        this.colors = new Color[nrOfLeds];
+    }
 
-        immutable(Tid)[] children;
-        Color[] colors;
-
-        this(uint nrOfLeds, immutable(Tid)[] children)
+    public override immutable(Color)[] render()
+    {
+        foreach (tid; children)
         {
-            this.colors = new Color[nrOfLeds];
-            this.children = children;
+            (cast(Tid) tid).send(thisTid, Render());
         }
 
-        public override immutable(Color)[] render()
+        foreach (tid; children)
         {
-            import std.stdio;
-
-            writeln("render");
-            foreach (tid; children)
-            {
-                (cast(Tid) tid).send(thisTid, Render());
-            }
-
-            foreach (tid; children)
-            {
-                receive((Render.Result r) {
-                    import std.stdio;
-
-                    writeln("got one result");
+            receive((Render.Result r) {
                     for (int i = 0; i < colors.length; ++i)
                     {
                         colors[i].add(r.data[i]);
                     }
                 });
+        }
+
+        return colors.dup;
+    }
+
+    override public immutable(Property)[] properties(Prefix prefix)
+    {
+        info("");
+        auto res = appender!(immutable(Property)[]);
+
+        foreach (tid; children) {
+            trace("checking one child");
+            try {
+
+                (cast(Tid) tid).send(thisTid, GetProperties(prefix));
+                receive((GetProperties.Result r) {
+                        res.put(r.result);
+                    });
+            } catch (Throwable t) {
+                error(t);
             }
-
-            return colors.dup;
         }
+        return cast(immutable(Property)[]) res.data;
+    }
 
-        public override immutable(Property)[] properties()
-        {
-            auto res = appender!(Property[]);
-            return cast(immutable(Property)[]) res.data;
-        }
-
-        public override bool apply(immutable(string)[] path, string value)
+    public override bool apply(immutable(string)[] path, string value)
+    {
+        if (super.apply(path, value))
         {
             return true;
-            /+
-            if (super.apply(path, value))
-            {
-                return true;
-            }
-
-            if (path.length == 1 && "color" == path[0])
-            {
-                color.value = value.to!Color;
-                return true;
-            }
-
-            warning("renderes†%s not supported".format(path));
-            return false;
-            +/
         }
 
+        if (path[0] != name) {
+            return false;
+        }
+
+        auto pathForChilds = path[1..$];
+        // TODO map
+        foreach (c; children) {
+            Tid child = (cast(Tid)c);
+            auto name =child.sendReceive!(GetName)();
+            if (name == pathForChilds[0]) {
+                bool res = child.sendReceive!(Apply)(pathForChilds, value);
+                if (!res) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
 }
