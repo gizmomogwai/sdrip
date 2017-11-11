@@ -116,12 +116,15 @@ static class SinImpl : RendererImpl
                      cast(ubyte)(f * color.value.g), cast(ubyte)(f * color.value.b));
     }
 
+    float f(float x) {
+        return max(0, pow(sin(x), 3));
+    }
     public override immutable(Color)[] render()
     {
         phase += velocity.value;
         // dfmt off
         return iota(0, nrOfLeds)
-            .map!(x => (sin((x * frequency.value + phase) / nrOfLeds * 2 * PI) + 1) / 2)
+            .map!(x => (f((x * frequency.value + phase) / nrOfLeds * 2 * PI)))
             .map!(x => floatToColor(x))
             .array
             .idup;
@@ -588,5 +591,29 @@ static class SumImpl : RendererImpl
         }
         return true;
     }
+}
 
+version (unittest) {
+void test() {
+        ownerTid.send("hello world");
+        ownerTid.send(1);
+    }
+}
+
+@("delegates in receive") unittest {
+    class T {
+        void receiveString(string s) {
+            writeln("received ", s);
+        }
+        void receiveInt(int i) {
+            writeln("received ", i);
+        }
+    }
+    auto t = new T();
+    spawnLinked(&test);
+
+    receive(&t.receiveString, &t.receiveInt);
+
+    receive((LinkTerminated t) {
+        });
 }
