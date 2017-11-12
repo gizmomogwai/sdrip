@@ -1,7 +1,7 @@
-module miditest;
+module misc.miditest;
 
-import std.socket;
 import std.conv;
+import std.socket;
 import std.stdio;
 import undead.socketstream;
 

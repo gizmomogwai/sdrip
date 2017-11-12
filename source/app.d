@@ -143,10 +143,11 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
 
 int main(string[] args)
 {
-    import miditest;
-    import midisim;
+    import misc.miditest;
+    import misc.midisim;
+    import misc.tcpreceiver;
+
     import std.process;
-    import tcpreceiver;
     import vibe.core.core : runApplication;
     import vibe.http.router;
     import vibe.http.server;
@@ -157,11 +158,11 @@ int main(string[] args)
         switch (args[1])
         {
         case "miditest":
-            return miditest.miditest(args.remove(1));
+            return misc.miditest.miditest(args.remove(1));
         case "tcpreceiver":
-            return tcpreceiver.receive(args.remove(1));
+            return misc.tcpreceiver.receive(args.remove(1));
         case "midisim":
-            return midisim.midisim(args.remove(1));
+            return misc.midisim.midisim(args.remove(1));
         default:
             error("unknown argument ", args[1]);
             return 1;

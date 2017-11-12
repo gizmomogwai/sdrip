@@ -1,11 +1,12 @@
-module tcpreceiver;
-import dyaml;
-import undead.socketstream;
-import std.socket;
+module misc.tcpreceiver;
+
 import dotstar;
-import std.experimental.logger;
+import dyaml;
 import prefs;
 import std.conv;
+import std.experimental.logger;
+import std.socket;
+import undead.socketstream;
 
 int receive(string[] args)
 {

@@ -1,8 +1,9 @@
-module midisim;
-import std.socket;
-import undead.socketstream;
+module misc.midisim;
+
 import core.thread;
+import std.socket;
 import std.stdio;
+import undead.socketstream;
 
 int midisim(string[] args)
 {
