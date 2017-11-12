@@ -17,6 +17,7 @@ class WebInterface
     void get()
     {
         import vibe.vibe;
+
         error("-------------------------------------");
         try
         {

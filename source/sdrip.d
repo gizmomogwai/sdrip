@@ -8,6 +8,7 @@ import messages;
 import std.stdio;
 import std.string;
 import std.range;
+import renderer;
 
 struct WithDefault(T)
 {
@@ -69,36 +70,13 @@ class Profiles
     }
 }
 
-class Renderer
-{
-    immutable string name;
-    immutable uint nrOfLeds;
-    Tid renderer;
-
-    this(string name, uint nrOfLeds)
-    {
-        this.name = name;
-        this.nrOfLeds = nrOfLeds;
-    }
-
-    public final Tid start()
-    {
-        renderer = internalStart();
-        return renderer;
-    }
-
-    protected abstract Tid internalStart();
-}
-
 import std.traits : Fields;
 
 auto sendReceive(Request)(Tid to, Fields!Request parameters)
 {
     to.send(thisTid, Request(parameters));
     Request.Result res;
-    receive((Request.Result r) {
-            res = r;
-        });
+    receive((Request.Result r) { res = r; });
     return res.result;
 }
 

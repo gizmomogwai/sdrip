@@ -6,10 +6,12 @@ struct SetRenderer
 
 struct GetName
 {
-    struct Result {
+    struct Result
+    {
         string result;
     }
 }
+
 struct Activate
 {
     string name;
@@ -18,6 +20,7 @@ struct Activate
         bool result;
     }
 }
+
 struct Index
 {
     struct Result
@@ -40,13 +43,18 @@ struct GetCurrent
     }
 }
 
-struct Prefix {
+struct Prefix
+{
     immutable(string)[] path;
-    Prefix add(string part) {
+    Prefix add(string part)
+    {
         return Prefix(path ~ part);
     }
-    string toString() {
+
+    string toString()
+    {
         import std.array;
+
         return path.join(".");
     }
 }
@@ -57,6 +65,7 @@ struct GetProperties
     struct Result
     {
         import sdrip;
+
         immutable(Property)[] result;
     }
 }
@@ -94,14 +103,17 @@ struct Render
     }
 }
 
-struct Apply {
+struct Apply
+{
     immutable(string)[] path;
     string value;
 
-    struct Result {
+    struct Result
+    {
         bool result;
     }
 }
+
 import std.concurrency : Tid;
 
 void shutdownChild(Tid tid)

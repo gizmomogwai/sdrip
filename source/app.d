@@ -11,9 +11,12 @@ import std.concurrency;
 import std.algorithm;
 import std.range;
 import sdrip;
-import renderers;
 import webinterface;
 import messages;
+import renderer;
+import renderer.sin;
+import renderer.sum;
+import renderer.midi;
 
 import core.time;
 import prefs;
@@ -141,6 +144,7 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
 int main(string[] args)
 {
     import miditest;
+    import midisim;
     import std.process;
     import tcpreceiver;
     import vibe.core.core : runApplication;
@@ -156,6 +160,8 @@ int main(string[] args)
             return miditest.miditest(args.remove(1));
         case "tcpreceiver":
             return tcpreceiver.receive(args.remove(1));
+        case "midisim":
+            return midisim.midisim(args.remove(1));
         default:
             error("unknown argument ", args[1]);
             return 1;

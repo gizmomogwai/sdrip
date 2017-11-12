@@ -36,10 +36,11 @@ f = file "#{output_folder}/libdotstar.a" => ["#{output_folder}/libdotstar.o"] do
 end
 
 file "sdrip" => (Dir.glob("**/*.d") + Dir.glob("**/*.dt") + Dir.glob("dub.*") + Dir.glob("rakefile.rb") + [f, 'source/versioninfo.d']) do
-  sh "dub build --verbose"
+  sh "dub build --compiler=dmd"
 end
 
-task :build => [lib, 'sdrip']
+task :build => [:format, lib, 'sdrip']
+
 desc 'quicktest'
 task :qtest do
   sh "dub test -c ut"
