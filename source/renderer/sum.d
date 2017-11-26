@@ -17,6 +17,7 @@ class Sum : Renderer
     public override Tid internalStart()
     {
         auto childrenTids = children.map!(child => child.start).array;
+        info("spawning thread for sum");
         return spawnLinked(&render, name, nrOfLeds, cast(immutable(Tid)[])(childrenTids));
     }
 

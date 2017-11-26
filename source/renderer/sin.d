@@ -99,12 +99,18 @@ class Sin : Renderer
 
     public override Tid internalStart()
     {
+                info("spawning thread for sin");
+
         return spawnLinked(&render, name, nrOfLeds, color, frequency, velocity);
     }
 
     static void render(string name, uint nrOfLeds, WithDefault!Color color,
             WithDefault!float frequency, WithDefault!float velocity)
     {
+        import core.thread;
+        Thread.getThis.name = "sin";
+        Thread.getThis.isDaemon = true;
+
         try
         {
             auto impl = new SinImpl(name, nrOfLeds, color, frequency, velocity);
@@ -117,18 +123,19 @@ class Sin : Renderer
                     &impl.properties,
                     &impl.apply,
                     &impl.shutdown,
+                    &impl.ownerTerminated,
                     &impl.unhandled
                 );
                 // dfmt on
 
             }
 
-            info("Sin.render finishing");
         }
         catch (Throwable t)
         {
             error(t);
         }
+        info("Sin.render finishing");
     }
 
 }

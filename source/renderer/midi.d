@@ -35,6 +35,8 @@ class Midi : Renderer
 
     public override Tid internalStart()
     {
+        info("spawning thread for midi");
+
         return spawnLinked(&render, name, nrOfLeds, host, port);
     }
 
@@ -135,6 +137,7 @@ class Midi : Renderer
         }
         auto x = cast(immutable float[]) h;
 
+        info("spawning thread for midi");
         Tid serverCommunication = spawnLinked(&communicateToServer, thisTid, host.idup, port);
 
         bool shutdown = false;

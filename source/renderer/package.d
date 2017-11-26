@@ -58,6 +58,9 @@ class RendererImpl
         pleaseShutdown = true;
         sender.send(request.Result());
     }
+    public void ownerTerminated(OwnerTerminated t) {
+        pleaseShutdown = true;
+    }
 
     public bool finished()
     {

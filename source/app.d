@@ -23,6 +23,9 @@ import prefs;
 
 Strip createStrip(uint nrOfLeds, immutable(Prefs) settings)
 {
+    if (settings.get("dummystrip") != "") {
+        return new DummyStrip(nrOfLeds);
+    }
     if (settings.get("tcpstrip") != "")
     {
         auto host = settings.get("tcpstrip");
@@ -35,6 +38,9 @@ Strip createStrip(uint nrOfLeds, immutable(Prefs) settings)
 
 void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
 {
+    Thread.getThis.name = "renderLoop";
+    Thread.getThis.isDaemon = false;
+
     // dfmt off
     auto profiles = new Profiles(thisTid,
         [
@@ -65,7 +71,7 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
         {
             import std.stdio;
 
-            const fps = 20;
+            const fps = 1;
             const msPerFrame = (1000 / fps).msecs;
             std.datetime.stopwatch.StopWatch sw;
             sw.reset();
@@ -115,8 +121,8 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
                 },
                 (Tid sender, Shutdown s) {
                     info("received shutdown");
-                    sender.send(s.Result());
                     finished = true;
+                    sender.send(s.Result());
                 },
                 (Tid sender, Apply apply)
                 {
@@ -128,16 +134,40 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
                 },
                 (LinkTerminated lt) {
                     info("link terminated ", lt);
+                    //                    finished = true;
                 },
                 (Variant v) {
                     error("unknown message received: ", v);
-                });
+                }
+            );
             // dfmt on
         }
     }
     catch (Exception e)
     {
+        error("finished with ", e);
         error(e);
+    }
+    writeln("Renderer.finished");
+}
+
+void anotherOne() {
+    Thread.getThis.name = "another one";
+    Thread.getThis.isDaemon = false;
+    bool running = true;
+    while (running) {
+        // dfmt off
+        receive(
+            (OwnerTerminated t)
+            {
+                info("another got owner terminated");
+                running = false;
+            },
+            (Variant v)
+            {
+                info("got ", v);
+            });
+        // dfmt on
     }
 }
 
@@ -148,7 +178,8 @@ int main(string[] args)
     import misc.tcpreceiver;
 
     import std.process;
-    import vibe.core.core : runApplication;
+    import vibe.core.core : runApplication, exitEventLoop;
+    import vibe.http.fileserver;
     import vibe.http.router;
     import vibe.http.server;
     import vibe.web.web;
@@ -174,18 +205,53 @@ int main(string[] args)
     auto settings = prefs.load("settings.yaml",
             "settings.yaml.%s".format(execute("hostname").output.strip));
     auto nrOfLeds = settings.get("nr_of_leds").to!uint;
-    Tid renderer = spawnLinked(&renderLoop, nrOfLeds, settings);
-    auto router = new URLRouter();
-    router.registerWebInterface(new WebInterface(renderer));
+    Tid renderer = std.concurrency.spawnLinked(&renderLoop, nrOfLeds, settings);
+    auto router = new URLRouter()
+        .registerWebInterface(new WebInterface(renderer))
+        .get("*", serveStaticFiles("./public/"));
+
 
     auto httpSettings = new HTTPServerSettings;
     httpSettings.port = 4567;
     auto listener = listenHTTP(httpSettings, router);
 
-    runApplication();
-    info("vibe application finished");
+    auto status = runApplication();
+    writeln("vibe finished");
 
-    std.concurrency.receive((LinkTerminated t) { writeln("renderloop finished"); });
+    std.concurrency.send(renderer, std.concurrency.thisTid, Shutdown());
+    bool rendererRunning = true;
+    while (rendererRunning) {
+        try {
+        std.concurrency.receive(
+            (LinkTerminated r)
+            {
+                info("link terminated");
+                rendererRunning = false;
+            },
+            (Shutdown.Result r) {
+                info("renderer sent back result");
+                rendererRunning = false;
+            },
+            (Variant v)
+            {
+                info("received ", v);
+            });
+        } catch (Exception e) {
+            info(e);
+        }
+    }
+
+    foreach (t; Thread.getAll) {
+        writeln("thread '%s': running = %s, daemon = %s".format(t.name, t.isRunning, t.isDaemon));
+    }
 
     return 0;
+}
+
+shared static this() {
+    writeln("static constructor");
+}
+
+shared static ~this() {
+    writeln("module destructor");
 }
