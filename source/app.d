@@ -23,7 +23,8 @@ import prefs;
 
 Strip createStrip(uint nrOfLeds, immutable(Prefs) settings)
 {
-    if (settings.get("dummystrip") != "") {
+    if (settings.get("dummystrip") != "")
+    {
         return new DummyStrip(nrOfLeds);
     }
     if (settings.get("tcpstrip") != "")
@@ -44,7 +45,7 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
     // dfmt off
     auto profiles = new Profiles(thisTid,
         [
-            new Sin("sin", nrOfLeds, Color(255, 0, 0), 2f, 1f),
+            new Sin("sin", nrOfLeds, Color(0xff, 0x80, 0), 2f, 1f),
             new Sum("sum", nrOfLeds,
                 [
                     new Sin("sin1", nrOfLeds, Color(255, 0, 0), 2f, 0.3f),
@@ -71,7 +72,7 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
         {
             import std.stdio;
 
-            const fps = 1;
+            const fps = 20;
             const msPerFrame = (1000 / fps).msecs;
             std.datetime.stopwatch.StopWatch sw;
             sw.reset();
@@ -151,11 +152,13 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
     writeln("Renderer.finished");
 }
 
-void anotherOne() {
+void anotherOne()
+{
     Thread.getThis.name = "another one";
     Thread.getThis.isDaemon = false;
     bool running = true;
-    while (running) {
+    while (running)
+    {
         // dfmt off
         receive(
             (OwnerTerminated t)
@@ -206,10 +209,8 @@ int main(string[] args)
             "settings.yaml.%s".format(execute("hostname").output.strip));
     auto nrOfLeds = settings.get("nr_of_leds").to!uint;
     Tid renderer = std.concurrency.spawnLinked(&renderLoop, nrOfLeds, settings);
-    auto router = new URLRouter()
-        .registerWebInterface(new WebInterface(renderer))
+    auto router = new URLRouter().registerWebInterface(new WebInterface(renderer))
         .get("*", serveStaticFiles("./public/"));
-
 
     auto httpSettings = new HTTPServerSettings;
     httpSettings.port = 4567;
@@ -220,38 +221,38 @@ int main(string[] args)
 
     std.concurrency.send(renderer, std.concurrency.thisTid, Shutdown());
     bool rendererRunning = true;
-    while (rendererRunning) {
-        try {
-        std.concurrency.receive(
-            (LinkTerminated r)
-            {
+    while (rendererRunning)
+    {
+        try
+        {
+            std.concurrency.receive((LinkTerminated r) {
                 info("link terminated");
                 rendererRunning = false;
-            },
-            (Shutdown.Result r) {
+            }, (Shutdown.Result r) {
                 info("renderer sent back result");
                 rendererRunning = false;
-            },
-            (Variant v)
-            {
-                info("received ", v);
-            });
-        } catch (Exception e) {
+            }, (Variant v) { info("received ", v); });
+        }
+        catch (Exception e)
+        {
             info(e);
         }
     }
 
-    foreach (t; Thread.getAll) {
+    foreach (t; Thread.getAll)
+    {
         writeln("thread '%s': running = %s, daemon = %s".format(t.name, t.isRunning, t.isDaemon));
     }
 
     return 0;
 }
 
-shared static this() {
+shared static this()
+{
     writeln("static constructor");
 }
 
-shared static ~this() {
+shared static ~this()
+{
     writeln("module destructor");
 }

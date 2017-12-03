@@ -7,8 +7,10 @@ html
     link(rel="icon", type="image/png", href="/favicon.png")
   body
     h1& welcome
-    h1& current profile:
-      a(href="/current") #{name}
+    form(action="/activate", method="post")
+      h1& current profile:
+        a(href="/current") #{name}
+        span !{active}
     - foreach (r; renderer)
       form(action="/activate", method="post")
         input(type="hidden", name="name", value="#{r}")

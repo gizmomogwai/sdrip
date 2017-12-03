@@ -1,3 +1,3 @@
 module versioninfo;
-static const string SHA = "e125994ac23065fcacce7ffedd7b5da6c5754c1e";
-static const string DESCRIPTION = "v0.0.1-7-ge125994-dirty";
+static const string SHA="714e7683e6b6af4e674b2c063578393562a0483a";
+static const string DESCRIPTION="v0.0.1-10-g714e768-dirty";

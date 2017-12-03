@@ -1,3 +1,36 @@
+script(type="text/javascript").
+  function resetToDefault(name) {
+    var v = $("input[name=" + name + "]");
+    v.attr("value", (v.attr("defaultvalue")))
+  }
+  function resetRadio(name) {
+    var inputs = $("input[name=" + name + "]");
+    inputs.each(function(index) {
+      var checked = $(this).attr("value") == $(this).attr("defaultvalue");
+      if (checked) {
+        $(this).attr("checked", "checked");
+      } else {
+        $(this).removeAttr("checked");
+      }
+    });
+  }
+
+  $("input[defaultvalue]").each(function(index) {
+    var name = $(this).attr('name');
+    var type = $(this).attr("type");
+    if (type != "radio") {
+      var h = "<input value=\"reset\" type=\"submit\" onclick=\"resetToDefault('" + name + "');\" />";
+      console.log("resetting");
+      $(this).after(h)
+    }
+  });
+
+  $("table.radio").each(function(index) {
+    var name = $(this).attr('name');
+    var h = "<input value=\"reset\" type=\"submit\" onclick=\"resetRadio('" + name + "');\" />";
+    $(this).after(h);
+  });
+
 - import versioninfo;
 p.
   Version: sdrip #[a(href="https://github.com/gizmomogwai/sdrip/commit/#{SHA}") #{DESCRIPTION}]

@@ -49,7 +49,12 @@ desc 'test'
 task :test do
   sh "dub test -c ut || dub test"
 end
-task :default => [:build]
+
+task :run => [:build] do
+  sh "dub run"
+end
+
+task :default => [:run]
 
 desc 'format'
 task :format do

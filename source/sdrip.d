@@ -102,10 +102,8 @@ class BoolProperty : Property
 
     override immutable string toHtml()
     {
-        const checked = `checked="checked"`;
-        return `<table class="radio" name="%1$s"><tr><td colspan="2">%1$s</td></tr>`.format(key) ~ `<tr><td>true</td><td><label class="radio"><input type="radio" name="%s" value="true" defaultvalue="%s" %s/></label></td></tr>`
-            .format(key, value.defaultValue, value.value ? checked : "") ~ `<tr><td>false</td><td><label class="radio"><input type="radio" name="%s" value="false" defaultvalue="%s" %s/></label></td></tr>`
-            .format(key, value.defaultValue, value.value ? "" : checked) ~ `</table>`;
+        return `<input type="checkbox" name="%1$s" %2$s data-toggle="toggle" />`.format(key, value.value
+                ? "checked" : "") ~ `<input type="hidden" name="%1$s" value="off" />`.format(key);
     }
 }
 

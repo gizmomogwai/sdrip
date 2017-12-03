@@ -21,14 +21,12 @@ class WebInterface
         error("-------------------------------------");
         try
         {
-            trace("Index");
             auto index = theRenderer.sendReceive!Index;
-            trace("Index");
             auto name = index.current;
-            trace("Index");
             auto renderer = index.renderer;
-            trace("Index");
-            render!("index.dt", name, renderer);
+            auto active = theRenderer.sendReceive!(GetProperties)(Prefix())[0].toHtml()
+                .replace("/>", "onChange=\"this.form.submit()\" />");
+            render!("index.dt", name, renderer, active);
         }
         catch (Exception e)
         {
@@ -45,10 +43,23 @@ class WebInterface
         exitEventLoop();
     }
 
+    private auto filterDoubleKeys(HTTPServerRequest request)
+    {
+        string[string] res;
+        foreach (k, v; request.form)
+        {
+            if (k !in res)
+            {
+                res[k] = v;
+            }
+        }
+        return res;
+    }
+
     void postSet(HTTPServerRequest request)
     {
-        info("WebInterface:postSet");
-        foreach (k, v; request.form)
+        info("WebInterface:postSet", request.form);
+        foreach (k, v; filterDoubleKeys(request))
         {
             trace(k, " -> ", v);
             auto result = theRenderer.sendReceive!Apply(k.split(".").idup, v);
@@ -62,6 +73,25 @@ class WebInterface
             }
         }
         renderCurrent();
+    }
+
+    void postActivate(HTTPServerRequest request)
+    {
+        info("WebInterface:postSet", request.form);
+        foreach (k, v; filterDoubleKeys(request))
+        {
+            trace(k, " -> ", v);
+            auto result = theRenderer.sendReceive!Apply(k.split(".").idup, v);
+            if (result)
+            {
+                trace("set %s to %s OK".format(k, v));
+            }
+            else
+            {
+                trace("set %s to %s NOT OK".format(k, v));
+            }
+        }
+        get();
     }
 
     void getCurrent()

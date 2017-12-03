@@ -5,7 +5,6 @@ import std.range;
 
 class Sum : Renderer
 {
-
     Renderer[] children;
 
     public this(string name, uint nrOfLeds, Renderer[] children)

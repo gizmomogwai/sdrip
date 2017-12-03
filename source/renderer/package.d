@@ -35,7 +35,7 @@ class RendererImpl
 {
     protected const string name;
     protected const uint nrOfLeds;
-    private bool active;
+    private WithDefault!bool active = withDefault(true);
     private bool pleaseShutdown = false;
     this(string name, uint nrOfLeds)
     {
@@ -58,7 +58,9 @@ class RendererImpl
         pleaseShutdown = true;
         sender.send(request.Result());
     }
-    public void ownerTerminated(OwnerTerminated t) {
+
+    public void ownerTerminated(OwnerTerminated t)
+    {
         pleaseShutdown = true;
     }
 
@@ -69,7 +71,14 @@ class RendererImpl
 
     public void render(Tid sender, Render request)
     {
-        sender.send(Render.Result(internalRender));
+        if (active.value)
+        {
+            sender.send(Render.Result(internalRender));
+        }
+        else
+        {
+            sender.send(Render.Result(iota(0, nrOfLeds).map!(x => Color(0, 0, 0)).array.idup));
+        }
     }
 
     protected abstract immutable(Color)[] internalRender();
@@ -83,7 +92,7 @@ class RendererImpl
     protected Property[] internalProperties(Prefix prefix)
     {
         Property[] res;
-        res ~= new BoolProperty(prefix.add("active").to!string, withDefault(active));
+        res ~= new BoolProperty(prefix.add("active").to!string, active);
         return res;
     }
 
@@ -94,8 +103,6 @@ class RendererImpl
 
     protected bool internalApply(immutable(string)[] path, string value)
     {
-        import std.conv;
-
         if (path.length != 2)
         {
             return false;
@@ -107,10 +114,11 @@ class RendererImpl
 
         if (path[1] == "active")
         {
-            active = value.to!bool;
+            active.value = value == "on" ? true : false;
             return true;
         }
 
         return false;
     }
+
 }

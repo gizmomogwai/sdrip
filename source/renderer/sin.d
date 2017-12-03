@@ -99,7 +99,7 @@ class Sin : Renderer
 
     public override Tid internalStart()
     {
-                info("spawning thread for sin");
+        info("spawning thread for sin");
 
         return spawnLinked(&render, name, nrOfLeds, color, frequency, velocity);
     }
@@ -108,6 +108,7 @@ class Sin : Renderer
             WithDefault!float frequency, WithDefault!float velocity)
     {
         import core.thread;
+
         Thread.getThis.name = "sin";
         Thread.getThis.isDaemon = true;
 

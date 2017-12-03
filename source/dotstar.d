@@ -144,18 +144,25 @@ class TcpStrip : Strip
     }
 }
 
-class DummyStrip : Strip {
-    this(uint nrOfLeds) {
+class DummyStrip : Strip
+{
+    this(uint nrOfLeds)
+    {
         super(nrOfLeds);
     }
-    override public Strip refresh() {
+
+    override public Strip refresh()
+    {
         info("refresh");
         return this;
     }
-    override public void close() {
+
+    override public void close()
+    {
         info("close");
     }
 }
+
 struct Color
 {
     ubyte a = cast(ubyte) 0xff;
