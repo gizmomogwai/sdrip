@@ -48,9 +48,9 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
             new Sin("sin", nrOfLeds, Color(0xff, 0x80, 0), 2f, 1f),
             new Sum("sum", nrOfLeds,
                 [
-                    new Sin("sin1", nrOfLeds, Color(255, 0, 0), 2f, 0.3f),
-                    new Sin("sin2", nrOfLeds, Color(0, 255, 0), 3, -0.3f)
-                 ]),
+                   new Sin("sin1", nrOfLeds, Color(255, 0, 0), 2f, 0.3f),
+                   new Sin("sin2", nrOfLeds, Color(0, 255, 0), 3, -0.3f)
+                ]),
             new Midi("midi", nrOfLeds, settings),
          ]);
     // dfmt on
