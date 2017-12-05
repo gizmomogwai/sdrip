@@ -12,7 +12,7 @@ html
         a(href="/current") #{name}
         span !{active}
     - foreach (r; renderer)
-      form(action="/activate", method="post")
+      form(action="/set", method="post")
         input(type="hidden", name="name", value="#{r}")
         input(type="submit", value="#{r}", style="height:100px; width:500px")
     form(action="/shutdown", method="post")
