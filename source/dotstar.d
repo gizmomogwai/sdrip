@@ -192,6 +192,50 @@ struct Color
         this.b = b;
     }
 
+    /++
+     + Params:
+     +      h = hue 0 <= h < 360
+     +      s = saturation 0.0f <= s <= 1.0f
+     +      v = value 0.0f <= v <= 1.0f
+     +/
+    static Color hsv(int h, float s=1.0f, float v=1.0f) @safe {
+        import std.typecons;
+        import std.math;
+        auto c = s * v;
+        auto x = c * (1 - abs(((h / 60) % 2) - 1));
+        auto m = v - c;
+        auto c_ = tuple!(float, "r", float, "g", float, "b");
+        if (h >= 0 && h < 60) {
+            c_.r = c;
+            c_.g = x;
+            c_.b = 0;
+        } else if (h >= 60 && h < 120) {
+            c_.r = x;
+            c_.g = c;
+            c_.b = 0;
+        } else if (h >= 120 && h < 180) {
+            c_.r = 0;
+            c_.g = c;
+            c_.b = x;
+        } else if (h >= 180 && h < 240) {
+            c_.r = 0;
+            c_.g = x;
+            c_.b = c;
+        } else if (h >= 240 && h < 300) {
+            c_.r = x;
+            c_.g = 0;
+            c_.b = c;
+        } else {
+            c_.r = c;
+            c_.g = 0;
+            c_.b = x;
+        }
+        return Color(((c_.r + m) * 255).lround.to!ubyte,
+                     ((c_.g + m) * 255).lround.to!ubyte,
+                     ((c_.b + m) * 255).lround.to!ubyte
+                     );
+    }
+
     void set(ubyte r, ubyte g, ubyte b)
     {
         this.r = r;
@@ -215,6 +259,84 @@ struct Color
     {
         return Color((this.r * f).to!ubyte, (this.g * f).to!ubyte, (this.b * f).to!ubyte);
     }
+}
+
+@("hsv2rgb") unittest {
+    import unit_threaded;
+    auto black = Color.hsv(0, 0, 0);
+    black.r.shouldEqual(0x00);
+    black.g.shouldEqual(0x00);
+    black.b.shouldEqual(0x00);
+
+    auto red = Color.hsv(0);
+    red.r.shouldEqual(0xff);
+    red.g.shouldEqual(0x00);
+    red.b.shouldEqual(0x00);
+
+    auto yellow = Color.hsv(60);
+    yellow.r.shouldEqual(0xff);
+    yellow.g.shouldEqual(0xff);
+    yellow.b.shouldEqual(0x00);
+
+    auto lime = Color.hsv(120);
+    lime.r.shouldEqual(0x00);
+    lime.g.shouldEqual(0xff);
+    lime.b.shouldEqual(0x00);
+
+    auto cyan = Color.hsv(180);
+    cyan.r.shouldEqual(0x00);
+    cyan.g.shouldEqual(0xff);
+    cyan.b.shouldEqual(0xff);
+
+    auto blue = Color.hsv(240);
+    blue.r.shouldEqual(0x00);
+    blue.g.shouldEqual(0x00);
+    blue.b.shouldEqual(0xff);
+
+    auto magenta = Color.hsv(300);
+    magenta.r.shouldEqual(0xff);
+    magenta.g.shouldEqual(0x00);
+    magenta.b.shouldEqual(0xff);
+
+    auto silver = Color.hsv(0, 0, .75f);
+    silver.r.shouldEqual(0xbf);
+    silver.g.shouldEqual(0xbf);
+    silver.b.shouldEqual(0xbf);
+
+    auto gray = Color.hsv(0, 0, .5f);
+    gray.r.shouldEqual(0x80);
+    gray.g.shouldEqual(0x80);
+    gray.b.shouldEqual(0x80);
+
+    auto maroon = Color.hsv(0, 1.0f, .5f);
+    maroon.r.shouldEqual(0x80);
+    maroon.g.shouldEqual(0x00);
+    maroon.b.shouldEqual(0x00);
+
+    auto olive = Color.hsv(60, 1.0f, .5f);
+    olive.r.shouldEqual(0x80);
+    olive.g.shouldEqual(0x80);
+    olive.b.shouldEqual(0x00);
+
+    auto green = Color.hsv(120, 1.0f, .5f);
+    green.r.shouldEqual(0x00);
+    green.g.shouldEqual(0x80);
+    green.b.shouldEqual(0x00);
+
+    auto teal = Color.hsv(180, 1.0f, .5f);
+    teal.r.shouldEqual(0x00);
+    teal.g.shouldEqual(0x80);
+    teal.b.shouldEqual(0x80);
+
+    auto navy = Color.hsv(240, 1.0f, .5f);
+    navy.r.shouldEqual(0x00);
+    navy.g.shouldEqual(0x00);
+    navy.b.shouldEqual(0x80);
+
+    auto purple = Color.hsv(300, 1.0f, .5f);
+    purple.r.shouldEqual(0x80);
+    purple.g.shouldEqual(0x00);
+    purple.b.shouldEqual(0x80);
 }
 
 ubyte addBytes(ubyte b1, ubyte b2)

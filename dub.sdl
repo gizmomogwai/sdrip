@@ -24,3 +24,23 @@ configuration "application-raspi" {
   targetPath "out/raspi"
   lflags "-Lout/raspi"
 }
+
+configuration "unittest" {
+  targetName "unittest"
+
+  dependency "unit-threaded" version="==0.7.32"
+  preBuildCommands "dub run unit-threaded -c gen_ut_main -- -f gen/testsuite.d"
+  mainSourceFile "gen/testsuite.d"
+  excludedSourceFiles "source/app.d"
+  lflags "-Lout/osx"
+}
+
+configuration "ut" {
+  targetName "ut"
+
+  versions "unitThreadedLight"
+  dependency "unit-threaded" version="==0.7.32"
+  mainSourceFile "gen/testsuite.d"
+  excludedSourceFiles "source/app.d"
+  lflags "-Lout/osx"
+}
