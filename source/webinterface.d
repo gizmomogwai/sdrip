@@ -19,7 +19,6 @@ class WebInterface
     {
         import vibe.vibe;
 
-        error("-------------------------------------");
         try
         {
             auto index = theRenderer.sendReceive!Index;
@@ -44,47 +43,14 @@ class WebInterface
         exitEventLoop();
     }
 
-    private auto filterDoubleKeys(HTTPServerRequest request)
+    public void getStatus()
     {
-        string[string] res;
-        foreach (k, v; request.form)
-        {
-            if (k !in res)
-            {
-                res[k] = v;
-            }
-        }
-        return res;
-    }
+        import core.thread;
 
-    private void setProperties(HTTPServerRequest request) {
-        foreach (k, v; filterDoubleKeys(request))
-        {
-            trace(k, " -> ", v);
-            auto result = theRenderer.sendReceive!Apply(k.split(".").idup, v);
-            if (result)
-            {
-                trace("set %s to %s OK".format(k, v));
-            }
-            else
-            {
-                trace("set %s to %s NOT OK".format(k, v));
-            }
-        }
-    }
-
-    void postSet(HTTPServerRequest request)
-    {
-        info("WebInterface:postSet", request.form);
-        setProperties(request);
-        renderCurrent();
-    }
-
-    void postActivate(HTTPServerRequest request)
-    {
-        info("WebInterface:postSet", request.form);
-        setProperties(request);
-        get();
+        info("WebInterface:getStatus");
+        auto threads = Thread.getAll();
+        auto idle = theRenderer.sendReceive!(Status);
+        render!("status.dt", threads, idle);
     }
 
     void getCurrent()
@@ -100,15 +66,61 @@ class WebInterface
         }
     }
 
-    void postActivate(string name)
+    public void postActivate(HTTPServerRequest request)
     {
-        info("WebInterface:postActivate ", name);
-        theRenderer.sendReceive!Activate(name);
+        info("WebInterface:postActivate ", request.form);
+        setProperties(request);
+        get();
+    }
+
+    public void postProfile(HTTPServerRequest request)
+    {
+        info("WebInterface:postProfile ", request.form);
+        theRenderer.sendReceive!(Activate)(request.form["name"]);
         renderCurrent();
     }
 
-    private auto removeTitle(immutable Property p) {
+    public void postSet(HTTPServerRequest request)
+    {
+        info("WebInterface:postSet ", request.form);
+        setProperties(request);
+        renderCurrent();
+    }
+
+    private auto filterDoubleKeys(HTTPServerRequest request)
+    {
+        string[string] res;
+        foreach (k, v; request.form)
+        {
+            if (k !in res)
+            {
+                res[k] = v;
+            }
+        }
+        return res;
+    }
+
+    private void setProperties(HTTPServerRequest request)
+    {
+        foreach (k, v; filterDoubleKeys(request))
+        {
+            trace(k, " -> ", v);
+            auto result = theRenderer.sendReceive!Apply(k.split(".").idup, v);
+            if (result)
+            {
+                trace("set %s to %s OK".format(k, v));
+            }
+            else
+            {
+                trace("set %s to %s NOT OK".format(k, v));
+            }
+        }
+    }
+
+    private auto removeTitle(immutable Property p)
+    {
         import std.regex;
+
         auto r = regex(">.*</input>", "g");
         return replaceAll(p.toHtml(), r, "/>");
     }
@@ -119,8 +131,8 @@ class WebInterface
 
         try
         {
-            auto name = theRenderer.prioritySendReceive!GetCurrent;
-            auto properties = theRenderer.prioritySendReceive!(GetProperties)(Prefix());
+            auto name = theRenderer.sendReceive!GetCurrent;
+            auto properties = theRenderer.sendReceive!(GetProperties)(Prefix());
             auto active = removeTitle(properties[0]);
 
             render!("current.dt", name, properties, active);

@@ -1,0 +1,16 @@
+doctype html
+html
+  head
+    title& welcome
+    include jquery
+    include bootstrap
+    link(rel="icon", type="image/png", href="/favicon.png")
+  body
+    h1
+      a(href="/") back to index
+
+    h1 Status (#{idle})
+    ul
+      - foreach (t; threads)
+        li !{t.name} -> !{t.isRunning}
+  include footer

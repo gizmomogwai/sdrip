@@ -85,7 +85,7 @@ auto sendReceive(Request)(Tid to, Fields!Request parameters)
 
 auto prioritySendReceive(Request)(Tid to, Fields!Request parameters)
 {
-    to.prioritySend(thisTid, Request(parameters));
+    to.send(thisTid, Request(parameters));
     Request.Result res;
     receive((Request.Result r) { res = r; });
     return res.result;

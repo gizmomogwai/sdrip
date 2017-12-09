@@ -22,6 +22,15 @@ class Sum : Renderer
 
     static void render(string name, uint nrOfLeds, immutable(Tid)[] children)
     {
+        scope (exit)
+        {
+            info("Finishing renderthread of sum");
+        }
+
+        import core.thread;
+
+        Thread.getThis.name = "sum(%s)".format(name);
+
         try
         {
             auto impl = new SumImpl(name, nrOfLeds, children);

@@ -100,17 +100,19 @@ class Sin : Renderer
     public override Tid internalStart()
     {
         info("spawning thread for sin");
-
         return spawnLinked(&render, name, nrOfLeds, color, frequency, velocity);
     }
 
     static void render(string name, uint nrOfLeds, WithDefault!Color color,
             WithDefault!float frequency, WithDefault!float velocity)
     {
+        scope (exit)
+        {
+            info("Finishing renderthread of sin");
+        }
         import core.thread;
 
-        Thread.getThis.name = "sin";
-        Thread.getThis.isDaemon = true;
+        Thread.getThis.name = "sin(%s)".format(name);
 
         try
         {

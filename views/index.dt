@@ -12,9 +12,10 @@ html
         a(href="/current") #{name}
         span !{active}
     - foreach (r; renderer)
-      form(action="/set", method="post")
+      form(action="/profile", method="post")
         input(type="hidden", name="name", value="#{r}")
         input(type="submit", value="#{r}", style="height:100px; width:500px")
     form(action="/shutdown", method="post")
       input(type="submit", value="shutdown", style="height:100px; width:500px")
+    a(href="/status") Status
   include footer

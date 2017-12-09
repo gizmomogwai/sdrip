@@ -74,6 +74,8 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings, shared(Timer) timer)
         const fps = 20;
         const msPerFrame = (1000 / fps).msecs;
         std.datetime.stopwatch.StopWatch sw;
+        Duration idleTime;
+        Duration renderTime;
         sw.reset();
         sw.start();
         while (!finished)
@@ -82,6 +84,15 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings, shared(Timer) timer)
 
             // dfmt off
             receive(
+                    (Tid sender, Status status)
+                    {
+                        import core.time;
+                        info("status");
+                        sender.send(Status.Result("idle: %sms, rendering: %sms, percent: %.1g"
+                                                  .format(idleTime.total!"msecs",
+                                                          renderTime.total!"msecs",
+                                                          100 * (double(renderTime.total!"msecs") / (double(renderTime.total!"msecs") + double(idleTime.total!"msecs"))))));
+                   },
                 (Tid sender, Index index)
                 {
                     info("index");
@@ -103,8 +114,10 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings, shared(Timer) timer)
                         }
                         strip.refresh();
                         auto duration = sw.peek();
+                        renderTime += duration;
                         if (duration < msPerFrame) {
                             auto delay = msPerFrame - duration;
+                            idleTime += delay;
                             auto tid = thisTid;
                             timer.runIn(() => tid.send(Render()), delay);
                         } else {
@@ -120,6 +133,8 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings, shared(Timer) timer)
                     renderer = tid;
                     rendererName = name;
                     hasRenderer = true;
+                    idleTime = Duration.zero;
+                    renderTime = Duration.zero;
                     thisTid.send(Render());
                 },
                 (Tid sender, Activate request) {
@@ -130,7 +145,7 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings, shared(Timer) timer)
                     sender.send(request.Result(rendererName));
                 },
                 (Tid sender, GetProperties request) {
-                    renderer.prioritySend(sender, request);
+                    renderer.send(sender, request);
                 },
                 (Tid sender, Shutdown s) {
                     info("received shutdown");
@@ -164,9 +179,10 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings, shared(Timer) timer)
     writeln("Renderer.finished");
 }
 
-alias Runnable=void delegate();
+alias Runnable = void delegate();
 
-class BlockingQueue(T) {
+class BlockingQueue(T)
+{
     import core.sync.condition;
     import core.sync.mutex;
     import std.container;
@@ -175,67 +191,93 @@ class BlockingQueue(T) {
     private Condition condition;
     private DList!T items;
 
-    this() {
+    this()
+    {
         mutex = new Mutex();
         condition = new Condition(mutex);
     }
 
-    void add(T item) shared {
-        synchronized (mutex) {
-            (cast()items).insertBack(item);
+    void add(T item) shared
+    {
+        synchronized (mutex)
+        {
+            (cast() items).insertBack(item);
             (cast() condition).notifyAll();
         }
     }
 
-    T remove() shared {
-        synchronized (mutex) {
-            while ((cast()items).empty()) {
-                (cast()condition).wait();
+    T remove() shared
+    {
+        synchronized (mutex)
+        {
+            while ((cast() items).empty())
+            {
+                (cast() condition).wait();
             }
 
-            while (!(cast()items).front.due) {
-                auto remaining = (cast()items).front.remainingDuration;
-                (cast()condition).wait(remaining);
+            while (!(cast() items).front.due)
+            {
+                auto remaining = (cast() items).front.remainingDuration;
+                (cast() condition).wait(remaining);
             }
 
-            T res = (cast()items).front;
-            (cast()items).removeFront;
+            T res = (cast() items).front;
+            (cast() items).removeFront;
             return res;
         }
     }
 }
 
-struct Task {
+struct Task
+{
     import std.datetime;
+
     Runnable run;
     SysTime at;
-    bool due() {
+    bool due()
+    {
         return at <= Clock.currTime;
     }
-    Duration remainingDuration() {
+
+    Duration remainingDuration()
+    {
         return at - Clock.currTime;
     }
 }
 
-class Timer : Thread {
+class Timer : Thread
+{
     import std.datetime;
 
+    string name;
     shared(BlockingQueue!Task) tasks;
-    this() {
+    this(string name)
+    {
+        this.name = "Timer(%s)".format(name);
         tasks = new shared(BlockingQueue!Task);
         super(&run);
     }
-    void runIn(Runnable run, Duration delta) shared {
+
+    void runIn(Runnable run, Duration delta) shared
+    {
         runAt(run, Clock.currTime() + delta);
     }
-    void runAt(Runnable run, SysTime at) shared {
+
+    void runAt(Runnable run, SysTime at) shared
+    {
         tasks.add(Task(run, at));
     }
-    private void run() {
-        scope (exit) {
-            writeln("Timer thread finished");
+
+    private void run()
+    {
+        scope (exit)
+        {
+            writeln("%s finished".format(name));
         }
-        while (true) {
+        Thread.getThis.name = name;
+
+        while (true)
+        {
             tasks.remove.run();
         }
     }
@@ -277,9 +319,8 @@ int main(string[] args)
             "settings.yaml.%s".format(execute("hostname").output.strip));
     auto nrOfLeds = settings.get("nr_of_leds").to!uint;
 
-    auto timer = cast(shared)new Timer;
-    (cast()timer).start;
-
+    auto timer = cast(shared) new Timer("main");
+    (cast() timer).start;
 
     Tid renderer = std.concurrency.spawnLinked(&renderLoop, nrOfLeds, settings, timer);
     auto router = new URLRouter().registerWebInterface(new WebInterface(renderer))

@@ -104,6 +104,14 @@ struct Render
     }
 }
 
+struct Status
+{
+    struct Result
+    {
+        string result;
+    }
+}
+
 struct Apply
 {
     immutable(string)[] path;

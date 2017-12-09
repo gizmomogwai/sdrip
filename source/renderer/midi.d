@@ -2,6 +2,7 @@ module renderer.midi;
 import renderer;
 import std.datetime.stopwatch;
 import prefs;
+import std.experimental.logger;
 
 class Midi : Renderer
 {
@@ -66,6 +67,14 @@ class Midi : Renderer
 
     static void communicateToServer(Tid renderer, string host, ushort port)
     {
+        scope (exit)
+        {
+            info("Finishing renderthread of communicateToServer");
+        }
+        import core.thread;
+
+        Thread.getThis.name = "communicateToServer";
+
         bool shutdown = false;
         while (!shutdown)
         {
@@ -126,6 +135,16 @@ class Midi : Renderer
 
     static void render(string name, uint nrOfLeds, string host, ushort port)
     {
+        scope (exit)
+        {
+            info("Finishing renderthread of midi");
+        }
+        {
+            import core.thread;
+
+            Thread.getThis.name = "midi";
+        }
+
         import mir.ndslice : sliced;
         import mir.interpolate.linear : linear;
 
