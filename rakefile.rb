@@ -13,7 +13,7 @@ end
 task 'source/versioninfo.d' do
   sha = `git rev-parse HEAD`.strip
   desc = `git describe --dirty`.strip;
-  File.write("source/versioninfo.d", "module versioninfo;\nstatic const string SHA=\"#{sha}\";\nstatic const string DESCRIPTION=\"#{desc}\";\n")
+  File.write("source/versioninfo.d", "/// Generated versioninfo\nmodule versioninfo;\nstatic const string SHA=\"#{sha}\";\nstatic const string DESCRIPTION=\"#{desc}\";\n")
 end
 
 task :sync do
@@ -39,15 +39,21 @@ file "sdrip" => (Dir.glob("**/*.d") + Dir.glob("**/*.dt") + Dir.glob("dub.*") + 
   sh "dub build --compiler=dmd"
 end
 
-task :build => [:format, lib, 'sdrip']
+task :build => [:format, lib, 'sdrip', :docs]
 
 desc 'quicktest'
 task :qtest do
   sh "dub test -c ut"
 end
+
 desc 'test'
 task :test do
   sh "dub test -c ut || dub test"
+end
+
+desc 'docs'
+task :docs do
+  sh "dub build --build=ddox"
 end
 
 task :run => [:build] do

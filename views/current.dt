@@ -9,10 +9,10 @@ html
   body
     h1
       a(href="/") back to index
-    h1 Current profile
     - if (name)
-      h2 #{name}
+      h1 Current profile
       form(action="/set", method="post")
+        h2 #{name} !{active}
         - foreach (p; properties)
           p !{p.toHtml()}
           br

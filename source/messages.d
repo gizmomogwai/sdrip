@@ -1,3 +1,4 @@
+/// Messages for message passing
 module messages;
 
 struct SetRenderer

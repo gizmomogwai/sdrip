@@ -1,3 +1,4 @@
+/// findby
 module find;
 
 InputRange findBy(alias pred = "a", InputRange, Element)(InputRange haystack, scope Element needle)

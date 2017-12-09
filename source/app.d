@@ -1,3 +1,6 @@
+/// main module, renderloop, strip initialization
+module app;
+
 import std.stdio;
 import std.string;
 import std.experimental.logger;
@@ -37,7 +40,7 @@ Strip createStrip(uint nrOfLeds, immutable(Prefs) settings)
     return new SpiStrip(nrOfLeds);
 }
 
-void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
+void renderLoop(uint nrOfLeds, immutable(Prefs) settings, shared(Timer) timer)
 {
     Thread.getThis.name = "renderLoop";
     Thread.getThis.isDaemon = false;
@@ -68,25 +71,29 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
         Tid renderer;
         string rendererName;
         bool hasRenderer = false;
+        const fps = 20;
+        const msPerFrame = (1000 / fps).msecs;
+        std.datetime.stopwatch.StopWatch sw;
+        sw.reset();
+        sw.start();
         while (!finished)
         {
             import std.stdio;
 
-            const fps = 20;
-            const msPerFrame = (1000 / fps).msecs;
-            std.datetime.stopwatch.StopWatch sw;
-            sw.reset();
-            sw.start();
-            if (hasRenderer)
-            {
-                renderer.send(thisTid, Render());
-            }
             // dfmt off
             receive(
                 (Tid sender, Index index)
                 {
                     info("index");
                     sender.send(Index.Result(Index.Result.Data(rendererName,profiles.renderers.map!(p => p.name).array)));
+                },
+                (Render render)
+                {
+                    sw.reset();
+                    sw.start();
+                    if (hasRenderer) {
+                        renderer.send(thisTid, Render());
+                    }
                 },
                 (Render.Result result)
                 {
@@ -97,7 +104,11 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
                         strip.refresh();
                         auto duration = sw.peek();
                         if (duration < msPerFrame) {
-                            Thread.sleep(msPerFrame - duration);
+                            auto delay = msPerFrame - duration;
+                            auto tid = thisTid;
+                            timer.runIn(() => tid.send(Render()), delay);
+                        } else {
+                            thisTid.send(Render());
                         }
                     } catch (Throwable t) {
                         error("error ", t);
@@ -109,6 +120,7 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
                     renderer = tid;
                     rendererName = name;
                     hasRenderer = true;
+                    thisTid.send(Render());
                 },
                 (Tid sender, Activate request) {
                     profiles.activate(request.name);
@@ -118,7 +130,7 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
                     sender.send(request.Result(rendererName));
                 },
                 (Tid sender, GetProperties request) {
-                    renderer.send(sender, request);
+                    renderer.prioritySend(sender, request);
                 },
                 (Tid sender, Shutdown s) {
                     info("received shutdown");
@@ -152,30 +164,86 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings)
     writeln("Renderer.finished");
 }
 
-void anotherOne()
-{
-    Thread.getThis.name = "another one";
-    Thread.getThis.isDaemon = false;
-    bool running = true;
-    while (running)
-    {
-        // dfmt off
-        receive(
-            (OwnerTerminated t)
-            {
-                info("another got owner terminated");
-                running = false;
-            },
-            (Variant v)
-            {
-                info("got ", v);
-            });
-        // dfmt on
+alias Runnable=void delegate();
+
+class BlockingQueue(T) {
+    import core.sync.condition;
+    import core.sync.mutex;
+    import std.container;
+
+    private Mutex mutex;
+    private Condition condition;
+    private DList!T items;
+
+    this() {
+        mutex = new Mutex();
+        condition = new Condition(mutex);
+    }
+
+    void add(T item) shared {
+        synchronized (mutex) {
+            (cast()items).insertBack(item);
+            (cast() condition).notifyAll();
+        }
+    }
+
+    T remove() shared {
+        synchronized (mutex) {
+            while ((cast()items).empty()) {
+                (cast()condition).wait();
+            }
+
+            while (!(cast()items).front.due) {
+                auto remaining = (cast()items).front.remainingDuration;
+                (cast()condition).wait(remaining);
+            }
+
+            T res = (cast()items).front;
+            (cast()items).removeFront;
+            return res;
+        }
+    }
+}
+
+struct Task {
+    import std.datetime;
+    Runnable run;
+    SysTime at;
+    bool due() {
+        return at <= Clock.currTime;
+    }
+    Duration remainingDuration() {
+        return at - Clock.currTime;
+    }
+}
+
+class Timer : Thread {
+    import std.datetime;
+
+    shared(BlockingQueue!Task) tasks;
+    this() {
+        tasks = new shared(BlockingQueue!Task);
+        super(&run);
+    }
+    void runIn(Runnable run, Duration delta) shared {
+        runAt(run, Clock.currTime() + delta);
+    }
+    void runAt(Runnable run, SysTime at) shared {
+        tasks.add(Task(run, at));
+    }
+    private void run() {
+        scope (exit) {
+            writeln("Timer thread finished");
+        }
+        while (true) {
+            tasks.remove.run();
+        }
     }
 }
 
 int main(string[] args)
 {
+
     import misc.miditest;
     import misc.midisim;
     import misc.tcpreceiver;
@@ -208,7 +276,12 @@ int main(string[] args)
     auto settings = prefs.load("settings.yaml",
             "settings.yaml.%s".format(execute("hostname").output.strip));
     auto nrOfLeds = settings.get("nr_of_leds").to!uint;
-    Tid renderer = std.concurrency.spawnLinked(&renderLoop, nrOfLeds, settings);
+
+    auto timer = cast(shared)new Timer;
+    (cast()timer).start;
+
+
+    Tid renderer = std.concurrency.spawnLinked(&renderLoop, nrOfLeds, settings, timer);
     auto router = new URLRouter().registerWebInterface(new WebInterface(renderer))
         .get("*", serveStaticFiles("./public/"));
 

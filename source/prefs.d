@@ -1,3 +1,4 @@
+/// Merged multi-file prefs
 module prefs;
 
 class Prefs

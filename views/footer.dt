@@ -1,8 +1,10 @@
 script(type="text/javascript").
+
   function resetToDefault(name) {
     var v = $("input[name=" + name + "]");
     v.attr("value", (v.attr("defaultvalue")))
   }
+
   function resetRadio(name) {
     var inputs = $("input[name=" + name + "]");
     inputs.each(function(index) {

@@ -1,3 +1,6 @@
+/++
+ + Profiles and properties
+ +/
 module sdrip;
 
 import dotstar;
@@ -80,6 +83,14 @@ auto sendReceive(Request)(Tid to, Fields!Request parameters)
     return res.result;
 }
 
+auto prioritySendReceive(Request)(Tid to, Fields!Request parameters)
+{
+    to.prioritySend(thisTid, Request(parameters));
+    Request.Result res;
+    receive((Request.Result r) { res = r; });
+    return res.result;
+}
+
 class Property
 {
     string key;
@@ -102,8 +113,9 @@ class BoolProperty : Property
 
     override immutable string toHtml()
     {
-        return `<input type="checkbox" name="%1$s" %2$s data-toggle="toggle" />`.format(key, value.value
-                ? "checked" : "") ~ `<input type="hidden" name="%1$s" value="off" />`.format(key);
+        return `<input type="checkbox" name="%1$s" %2$s data-toggle="toggle" onChange="this.form.submit();">%1$s</input>`
+            .format(key, value.value ? "checked" : "")
+            ~ `<input type="hidden" name="%1$s" value="off" />`.format(key);
     }
 }
 

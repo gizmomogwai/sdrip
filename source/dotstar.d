@@ -1,3 +1,6 @@
+/++
+ + Lowlevel api to work with a dotstar strip.
+ +/
 module dotstar;
 
 import core.thread;
@@ -153,7 +156,7 @@ class DummyStrip : Strip
 
     override public Strip refresh()
     {
-        info("refresh");
+        //        info("dotstart†refresh");
         return this;
     }
 
@@ -198,42 +201,53 @@ struct Color
      +      s = saturation 0.0f <= s <= 1.0f
      +      v = value 0.0f <= v <= 1.0f
      +/
-    static Color hsv(int h, float s=1.0f, float v=1.0f) @safe {
+    static Color hsv(int h, float s = 1.0f, float v = 1.0f) @safe
+    {
         import std.typecons;
         import std.math;
+
         auto c = s * v;
         auto x = c * (1 - abs(((h / 60) % 2) - 1));
         auto m = v - c;
         auto c_ = tuple!(float, "r", float, "g", float, "b");
-        if (h >= 0 && h < 60) {
+        if (h >= 0 && h < 60)
+        {
             c_.r = c;
             c_.g = x;
             c_.b = 0;
-        } else if (h >= 60 && h < 120) {
+        }
+        else if (h >= 60 && h < 120)
+        {
             c_.r = x;
             c_.g = c;
             c_.b = 0;
-        } else if (h >= 120 && h < 180) {
+        }
+        else if (h >= 120 && h < 180)
+        {
             c_.r = 0;
             c_.g = c;
             c_.b = x;
-        } else if (h >= 180 && h < 240) {
+        }
+        else if (h >= 180 && h < 240)
+        {
             c_.r = 0;
             c_.g = x;
             c_.b = c;
-        } else if (h >= 240 && h < 300) {
+        }
+        else if (h >= 240 && h < 300)
+        {
             c_.r = x;
             c_.g = 0;
             c_.b = c;
-        } else {
+        }
+        else
+        {
             c_.r = c;
             c_.g = 0;
             c_.b = x;
         }
-        return Color(((c_.r + m) * 255).lround.to!ubyte,
-                     ((c_.g + m) * 255).lround.to!ubyte,
-                     ((c_.b + m) * 255).lround.to!ubyte
-                     );
+        return Color(((c_.r + m) * 255).lround.to!ubyte, ((c_.g + m) * 255)
+                .lround.to!ubyte, ((c_.b + m) * 255).lround.to!ubyte);
     }
 
     void set(ubyte r, ubyte g, ubyte b)
@@ -261,8 +275,10 @@ struct Color
     }
 }
 
-@("hsv2rgb") unittest {
+@("hsv2rgb") unittest
+{
     import unit_threaded;
+
     auto black = Color.hsv(0, 0, 0);
     black.r.shouldEqual(0x00);
     black.g.shouldEqual(0x00);
