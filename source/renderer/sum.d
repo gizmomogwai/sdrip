@@ -17,7 +17,7 @@ class Sum : Renderer
     {
         auto childrenTids = children.map!(child => child.start).array;
         info("spawning thread for sum");
-        return spawnLinked(&render, name, nrOfLeds, cast(immutable(Tid)[])(childrenTids));
+        return spawnLinked(&render, name, nrOfLeds, cast(immutable)(childrenTids));
     }
 
     static void render(string name, uint nrOfLeds, immutable(Tid)[] children)
@@ -71,6 +71,12 @@ static class SumImpl : RendererImpl
         super(name, nrOfLeds);
         this.children = children;
         this.colors = new Color[nrOfLeds];
+    }
+
+    public override void shutdown(Tid sender, Shutdown request)
+    {
+        children.each!(i => (cast() i).send(thisTid, request));
+        super.shutdown(sender, request);
     }
 
     public override immutable(Color)[] internalRender()

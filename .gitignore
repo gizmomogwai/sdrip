@@ -12,3 +12,6 @@ sdrip-test-*
 *.o
 *.obj
 *.lst
+out
+unittest
+gen
