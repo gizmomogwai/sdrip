@@ -151,3 +151,16 @@ class ColorProperty : Property
     }
 
 }
+
+class FloatProperty : Property
+{
+    WithDefault!float value;
+    this(string key, WithDefault!float value)
+        {
+            super(key);
+            this.value = value;
+        }
+    override immutable string toHtml() {
+        return "nyi";
+    }
+}

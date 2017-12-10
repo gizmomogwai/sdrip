@@ -14,6 +14,7 @@ import renderer;
 import renderer.sin;
 import renderer.sum;
 import renderer.midi;
+import renderer.rainbow;
 
 void renderLoop(uint nrOfLeds, immutable(Prefs) settings, shared(Timer) timer)
 {
@@ -34,6 +35,7 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings, shared(Timer) timer)
                    new Sin("sin2", nrOfLeds, Color(0, 255, 0), 3, -3f)
                 ]),
             new Midi("midi", nrOfLeds, settings),
+            new Rainbow("rainbow", nrOfLeds, 1)
          ]);
     // dfmt on
 

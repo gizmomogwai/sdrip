@@ -1,50 +1,41 @@
-/// sinus
-module renderer.sin;
+/// rainbow colors
+module renderer.rainbow;
 
 import renderer;
+import sdrip;
 import std.algorithm;
 import std.conv;
 import std.range;
 import std.string;
 
-class SinImpl : RendererImpl
+class RainbowImpl : RendererImpl
 {
     import std.math;
 
-    WithDefault!Color color;
-
-    WithDefault!float frequency;
     WithDefault!float velocity;
-    float phase;
+    float phase = 0;
 
-    this(string name, uint nrOfLeds, WithDefault!Color color,
-            WithDefault!float frequency, WithDefault!float velocity)
+    this(string name, uint nrOfLeds, WithDefault!float velocity)
     {
         super(name, nrOfLeds);
-        this.color = color;
-        this.frequency = frequency;
         this.velocity = velocity;
-        this.phase = 0f;
     }
 
-    auto floatToColor(float f)
-    {
-        return Color(cast(ubyte)(f * color.value.r),
-                cast(ubyte)(f * color.value.g), cast(ubyte)(f * color.value.b));
+    int hue(float v) {
+        while (v >= 360) {
+            v -= 360;
+        }
+        while (v < 0) {
+            v += 360;
+        }
+        return lround(v).to!int;
     }
-
-    float f(float x)
-    {
-        return max(0, pow(sin(x), 3));
-    }
-
     protected override immutable(Color)[] internalRender()
     {
         phase += velocity.value;
         // dfmt off
         return iota(0, nrOfLeds)
-            .map!(x => (f((x * frequency.value + phase) / nrOfLeds * 2 * PI)))
-            .map!(x => floatToColor(x))
+            .map!(x => Color.hsv(hue(phase + (x.to!float * 360.0f / nrOfLeds.to!float))))
             .array
             .idup;
         // dfmt on
@@ -53,7 +44,7 @@ class SinImpl : RendererImpl
     protected override Property[] internalProperties(Prefix prefix)
     {
         Property[] res = super.internalProperties(prefix);
-        res ~= new ColorProperty(prefix.add("color").to!string, color);
+        //res ~= new FloatProperty(prefix.add("velocity").to!string, velocity);
         return res;
     }
 
@@ -73,9 +64,9 @@ class SinImpl : RendererImpl
             return false;
         }
 
-        if (path[1] == "color")
+        if (path[1] == "velocity")
         {
-            color.value = value.to!Color;
+            velocity.value = value.to!float;
             return true;
         }
 
@@ -85,39 +76,33 @@ class SinImpl : RendererImpl
 
 }
 
-class Sin : Renderer
+class Rainbow : Renderer
 {
-    WithDefault!Color color;
-    WithDefault!float frequency;
     WithDefault!float velocity;
-    public this(string name, uint nrOfLeds, Color color, float frequency, float velocity)
+    public this(string name, uint nrOfLeds, float velocity)
     {
         super(name, nrOfLeds);
-        this.color = withDefault(color);
-        this.frequency = withDefault(frequency);
         this.velocity = withDefault(velocity);
     }
 
     public override Tid internalStart()
     {
-        info("spawning thread for sin");
-        return spawnLinked(&render, name, nrOfLeds, color, frequency, velocity);
+        info("spawning thread for rainbow");
+        return spawnLinked(&render, name, nrOfLeds, velocity);
     }
 
-    static void render(string name, uint nrOfLeds, WithDefault!Color color,
-            WithDefault!float frequency, WithDefault!float velocity)
+    static void render(string name, uint nrOfLeds, WithDefault!float velocity)
     {
         scope (exit)
         {
-            info("Finishing renderthread of sin");
+            info("Finishing renderthread of rainbow");
         }
         import core.thread;
-
-        Thread.getThis.name = "sin(%s)".format(name);
+        Thread.getThis.name = "rainbow(%s)".format(name);
 
         try
         {
-            auto impl = new SinImpl(name, nrOfLeds, color, frequency, velocity);
+            auto impl = new RainbowImpl(name, nrOfLeds, velocity);
             while (!impl.finished())
             {
                 // dfmt off

@@ -6,6 +6,7 @@ module dotstar;
 import core.thread;
 import std.conv;
 import std.experimental.logger;
+import std.math;
 import std.socket;
 import std.string;
 import undead.socketstream;
@@ -197,18 +198,16 @@ struct Color
 
     /++
      + Params:
-     +      h = hue 0 <= h < 360
+     +      h = hue 0f <= h < 360f
      +      s = saturation 0.0f <= s <= 1.0f
      +      v = value 0.0f <= v <= 1.0f
      +/
-    static Color hsv(int h, float s = 1.0f, float v = 1.0f) @safe
+    static Color hsv(float h, float s = 1.0f, float v = 1.0f) @safe
     {
         import std.typecons;
-        import std.math;
-
-        auto c = s * v;
-        auto x = c * (1 - abs(((h / 60) % 2) - 1));
-        auto m = v - c;
+        float c = s * v;
+        float x = c * (1 - abs(((h / 60) % 2) - 1));
+        float m = v - c;
         auto c_ = tuple!(float, "r", float, "g", float, "b");
         if (h >= 0 && h < 60)
         {
@@ -246,8 +245,9 @@ struct Color
             c_.g = 0;
             c_.b = x;
         }
-        return Color(((c_.r + m) * 255).lround.to!ubyte, ((c_.g + m) * 255)
-                .lround.to!ubyte, ((c_.b + m) * 255).lround.to!ubyte);
+        return Color(((c_.r + m) * 255).lround.to!ubyte,
+                     ((c_.g + m) * 255).lround.to!ubyte,
+                     ((c_.b + m) * 255).lround.to!ubyte);
     }
 
     void set(ubyte r, ubyte g, ubyte b)
@@ -353,6 +353,11 @@ struct Color
     purple.r.shouldEqual(0x80);
     purple.g.shouldEqual(0x00);
     purple.b.shouldEqual(0x80);
+
+    auto orange = Color.hsv(30);
+    orange.r.shouldEqual(0xff);
+    orange.g.shouldEqual(0x80);
+    orange.b.shouldEqual(0x00);
 }
 
 ubyte addBytes(ubyte b1, ubyte b2)
