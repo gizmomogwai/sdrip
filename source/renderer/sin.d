@@ -13,12 +13,12 @@ class SinImpl : RendererImpl
 
     WithDefault!Color color;
 
-    WithDefault!float frequency;
-    WithDefault!float velocity;
+    MinMaxWithDefault!float frequency;
+    MinMaxWithDefault!float velocity;
     float phase;
 
     this(string name, uint nrOfLeds, WithDefault!Color color,
-            WithDefault!float frequency, WithDefault!float velocity)
+            MinMaxWithDefault!float frequency, MinMaxWithDefault!float velocity)
     {
         super(name, nrOfLeds);
         this.color = color;
@@ -54,6 +54,8 @@ class SinImpl : RendererImpl
     {
         Property[] res = super.internalProperties(prefix);
         res ~= new ColorProperty(prefix.add("color").to!string, color);
+        res ~= new FloatProperty(prefix.add("frequency").to!string, frequency);
+        res ~= new FloatProperty(prefix.add("velocity").to!string, velocity);
         return res;
     }
 
@@ -73,14 +75,20 @@ class SinImpl : RendererImpl
             return false;
         }
 
-        if (path[1] == "color")
-        {
+        switch (path[1]) {
+        case "color":
             color.value = value.to!Color;
             return true;
+        case "frequency":
+            frequency.value = value.to!float;
+            return true;
+        case "velocity":
+            velocity.value = value.to!float;
+            return true;
+        default:
+            warning("%s†%s not supported".format(__MODULE__, path));
+            return false;
         }
-
-        warning("%s†%s not supported".format(__MODULE__, path));
-        return false;
     }
 
 }
@@ -88,14 +96,15 @@ class SinImpl : RendererImpl
 class Sin : Renderer
 {
     WithDefault!Color color;
-    WithDefault!float frequency;
-    WithDefault!float velocity;
-    public this(string name, uint nrOfLeds, Color color, float frequency, float velocity)
+    MinMaxWithDefault!float frequency;
+    MinMaxWithDefault!float velocity;
+    public this(string name, uint nrOfLeds, Color color,
+            MinMaxWithDefault!float frequency, MinMaxWithDefault!float velocity)
     {
         super(name, nrOfLeds);
         this.color = withDefault(color);
-        this.frequency = withDefault(frequency);
-        this.velocity = withDefault(velocity);
+        this.frequency = frequency;
+        this.velocity = velocity;
     }
 
     public override Tid internalStart()
@@ -105,7 +114,7 @@ class Sin : Renderer
     }
 
     static void render(string name, uint nrOfLeds, WithDefault!Color color,
-            WithDefault!float frequency, WithDefault!float velocity)
+            MinMaxWithDefault!float frequency, MinMaxWithDefault!float velocity)
     {
         scope (exit)
         {

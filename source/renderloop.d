@@ -28,15 +28,15 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings, shared(Timer) timer)
     // dfmt off
     auto profiles = new Profiles(thisTid,
         [
-            new Sin("sin", nrOfLeds, Color(0xff, 0x80, 0), 2f, 1f),
+            new Sin("sin", nrOfLeds, Color(0xff, 0x80, 0), minMaxWithDefault(2f, 1f, 10f), minMaxWithDefault(1f, -3, 3)),
             new Sum("sum", nrOfLeds,
                 [
-                   new Sin("sin1", nrOfLeds, Color(255, 0, 0), 2f, 3f),
-                   new Sin("sin2", nrOfLeds, Color(0, 255, 0), 3, -3f)
+                    new Sin("sin1", nrOfLeds, Color(255, 0, 0), minMaxWithDefault(2f, 1f, 10f), minMaxWithDefault(3f, -3, 3)),
+                    new Sin("sin2", nrOfLeds, Color(0, 255, 0), minMaxWithDefault(3f, 1f, 10f), minMaxWithDefault(3f, -3f, 3f))
                 ]),
             new Midi("midi", nrOfLeds, settings),
             new Rainbow("rainbow", nrOfLeds, minMaxWithDefault(1.0f, 1, 10))
-         ]);
+        ]);
     // dfmt on
 
     try

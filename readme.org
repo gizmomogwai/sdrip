@@ -1,0 +1,8 @@
+* sdrip
+
+* Features
+** support for android app (json rest api)
+** implement alarm
+
+* Finished Features
+** DONE add parameters to sin
