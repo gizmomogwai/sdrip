@@ -205,6 +205,7 @@ struct Color
     static Color hsv(float h, float s = 1.0f, float v = 1.0f) @safe
     {
         import std.typecons;
+
         float c = s * v;
         float x = c * (1 - abs(((h / 60) % 2) - 1));
         float m = v - c;
@@ -245,9 +246,8 @@ struct Color
             c_.g = 0;
             c_.b = x;
         }
-        return Color(((c_.r + m) * 255).lround.to!ubyte,
-                     ((c_.g + m) * 255).lround.to!ubyte,
-                     ((c_.b + m) * 255).lround.to!ubyte);
+        return Color(((c_.r + m) * 255).lround.to!ubyte, ((c_.g + m) * 255)
+                .lround.to!ubyte, ((c_.b + m) * 255).lround.to!ubyte);
     }
 
     void set(ubyte r, ubyte g, ubyte b)

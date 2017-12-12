@@ -29,6 +29,24 @@ static withDefault(T)(T value, T defaultValue)
     return WithDefault!(T)(value, defaultValue);
 }
 
+struct MinMaxWithDefault(T)
+{
+    T value;
+    T defaultValue;
+    T min;
+    T max;
+}
+
+static minMaxWithDefault(T)(T v, T min, T max)
+{
+    return MinMaxWithDefault!(T)(v, v, min, max);
+}
+
+static minMaxWithDefault(T)(T v, T defaultValue, T min, T max)
+{
+    return MinMaxWithDefault!(T)(v, defaultValue, min, max);
+}
+
 class Profiles
 {
     Tid renderer;
@@ -154,13 +172,16 @@ class ColorProperty : Property
 
 class FloatProperty : Property
 {
-    WithDefault!float value;
-    this(string key, WithDefault!float value)
-        {
-            super(key);
-            this.value = value;
-        }
-    override immutable string toHtml() {
-        return "nyi";
+    MinMaxWithDefault!float value;
+    this(string key, MinMaxWithDefault!float value)
+    {
+        super(key);
+        this.value = value;
+    }
+
+    override immutable string toHtml()
+    {
+        return "%1$s %4$s <input type=\"text\" name=\"%1$s\" value=\"%2$s\" defaultValue=\"%3$s\" />%5$s".format(key,
+                value.value, value.defaultValue, value.min, value.max);
     }
 }

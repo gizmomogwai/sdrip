@@ -35,7 +35,7 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings, shared(Timer) timer)
                    new Sin("sin2", nrOfLeds, Color(0, 255, 0), 3, -3f)
                 ]),
             new Midi("midi", nrOfLeds, settings),
-            new Rainbow("rainbow", nrOfLeds, 1)
+            new Rainbow("rainbow", nrOfLeds, minMaxWithDefault(1.0f, 1, 10))
          ]);
     // dfmt on
 

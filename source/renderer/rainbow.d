@@ -12,24 +12,28 @@ class RainbowImpl : RendererImpl
 {
     import std.math;
 
-    WithDefault!float velocity;
+    MinMaxWithDefault!float velocity;
     float phase = 0;
 
-    this(string name, uint nrOfLeds, WithDefault!float velocity)
+    this(string name, uint nrOfLeds, MinMaxWithDefault!float velocity)
     {
         super(name, nrOfLeds);
         this.velocity = velocity;
     }
 
-    int hue(float v) {
-        while (v >= 360) {
+    int hue(float v)
+    {
+        while (v >= 360)
+        {
             v -= 360;
         }
-        while (v < 0) {
+        while (v < 0)
+        {
             v += 360;
         }
         return lround(v).to!int;
     }
+
     protected override immutable(Color)[] internalRender()
     {
         phase += velocity.value;
@@ -44,7 +48,7 @@ class RainbowImpl : RendererImpl
     protected override Property[] internalProperties(Prefix prefix)
     {
         Property[] res = super.internalProperties(prefix);
-        //res ~= new FloatProperty(prefix.add("velocity").to!string, velocity);
+        res ~= new FloatProperty(prefix.add("velocity").to!string, velocity);
         return res;
     }
 
@@ -78,11 +82,11 @@ class RainbowImpl : RendererImpl
 
 class Rainbow : Renderer
 {
-    WithDefault!float velocity;
-    public this(string name, uint nrOfLeds, float velocity)
+    MinMaxWithDefault!float velocity;
+    public this(string name, uint nrOfLeds, MinMaxWithDefault!float velocity)
     {
         super(name, nrOfLeds);
-        this.velocity = withDefault(velocity);
+        this.velocity = velocity;
     }
 
     public override Tid internalStart()
@@ -91,13 +95,14 @@ class Rainbow : Renderer
         return spawnLinked(&render, name, nrOfLeds, velocity);
     }
 
-    static void render(string name, uint nrOfLeds, WithDefault!float velocity)
+    static void render(string name, uint nrOfLeds, MinMaxWithDefault!float velocity)
     {
         scope (exit)
         {
             info("Finishing renderthread of rainbow");
         }
         import core.thread;
+
         Thread.getThis.name = "rainbow(%s)".format(name);
 
         try

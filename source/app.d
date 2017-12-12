@@ -68,35 +68,9 @@ int main(string[] args)
     auto status = runApplication();
     writeln("vibe finished");
 
-    std.concurrency.send(renderer, std.concurrency.thisTid, Shutdown());
-    bool rendererRunning = true;
-    while (rendererRunning)
-    {
-        try
-        {
-            std.concurrency.receive((LinkTerminated r) {
-                info("link terminated");
-                rendererRunning = false;
-            }, (Shutdown.Result r) {
-                info("renderer sent back result");
-                rendererRunning = false;
-            }, (Variant v) { info("received ", v); });
-        }
-        catch (Exception e)
-        {
-            info(e);
-        }
-    }
+    info("shutting down the rest");
+    renderer.shutdownAndWait();
+    info("shutting down complete");
 
     return 0;
-}
-
-shared static this()
-{
-    writeln("static constructor");
-}
-
-shared static ~this()
-{
-    writeln("module destructor");
 }

@@ -30,6 +30,8 @@ class Timer : Thread
 
     string name;
     shared(BlockingQueue!Task) tasks;
+    bool finished = false;
+
     this(string name)
     {
         this.name = "Timer(%s)".format(name);
@@ -47,6 +49,16 @@ class Timer : Thread
         tasks.add(Task(run, at));
     }
 
+    void shutdown() shared
+    {
+        runAt(() => finish(), Clock.currTime);
+    }
+
+    private void finish() shared
+    {
+        finished = true;
+    }
+
     private void run()
     {
         scope (exit)
@@ -55,7 +67,7 @@ class Timer : Thread
         }
         Thread.getThis.name = name;
 
-        while (true)
+        while (!finished)
         {
             tasks.remove.run();
         }

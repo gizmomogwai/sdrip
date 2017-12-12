@@ -36,10 +36,6 @@ class WebInterface
 
     void postShutdown()
     {
-        info("shutting down");
-        theRenderer.shutdownAndWait();
-        info("shutting down complete ... killing event loop");
-
         exitEventLoop();
     }
 
