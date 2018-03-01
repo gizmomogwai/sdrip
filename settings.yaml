@@ -1,0 +1,7 @@
+---
+location: test
+nr_of_leds: 120
+port: 4567
+#midi_server_host: piano.local
+midi_server_host: 127.0.0.1
+midi_server_port: 55554

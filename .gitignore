@@ -1,0 +1,16 @@
+.dub
+docs.json
+__dummy.html
+docs/
+sdrip3.so
+sdrip3.dylib
+sdrip3.dll
+sdrip3.a
+sdrip3.lib
+sdrip3-test-*
+*.exe
+*.o
+*.obj
+*.lst
+/out
+/sdrip3
