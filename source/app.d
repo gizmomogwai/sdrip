@@ -49,6 +49,8 @@ int main(string[] args)
 {
     import std.process;
     import std.string;
+    import std.experimental.logger;
+    info("sdrip3");
 
     auto s = prefs.load("settings.yaml",
                         "settings.yaml.%s".format(execute("hostname").output.strip));

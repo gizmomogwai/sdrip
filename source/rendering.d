@@ -1,6 +1,8 @@
 module rendering;
 
 import core.thread;
+import core.time;
+import dotstar;
 import messages;
 import prefs;
 import state;
@@ -8,11 +10,13 @@ import std.algorithm;
 import std.array;
 import std.concurrency;
 import std.conv;
+import std.datetime;
 import std.experimental.logger;
 import std.stdio;
 import std.string;
+import timer;
 import vibe.data.json;
-
+import std.datetime.stopwatch;
 
 auto path(string prefix, string name) {
     return "%s%s%s".format(prefix, prefix != "" ? "." : "", name);
@@ -98,6 +102,11 @@ class Renderer {
                           "properties": Json(properties.map!(p => p.toJson(path)).array)
                           ]);
     }
+    Color[] render() {
+        return null;
+    }
+    void start() {}
+    void stop() {}
 }
 
 
@@ -114,6 +123,13 @@ class ColorRenderer : Renderer {
     writeln(new ColorRenderer("red", "#ab0000").toJson("prefix"));
 }
 
+class DummyRenderer : Renderer {
+    this() {
+        super("dummy", []);
+    }
+    override void start() {}
+    override void stop() {}
+}
 
 void renderloop(immutable(Prefs) settings)
 {
@@ -121,6 +137,10 @@ void renderloop(immutable(Prefs) settings)
     {
         info("renderLoop finished");
     }
+
+    try {
+    auto strip = createStrip(settings);
+    const msPerFrame = (1000 / settings.get("fps").to!int).msecs;
 
     Thread.getThis.name = "renderLoop";
     Thread.getThis.isDaemon = false;
@@ -131,18 +151,55 @@ void renderloop(immutable(Prefs) settings)
          new ColorRenderer("red", "#ff0000"),
          new ColorRenderer("green", "#00ff00")
                             ];
+    Renderer currentRenderer = new DummyRenderer;
+    auto timer = new Timer("");
+    std.datetime.stopwatch.StopWatch sw;
+
     while (!finished)
         {
-
+            info(".");
             // dfmt off
             receive(
                     (Tid sender, GetState s) {
                         sender.send(GetState.Result(Json(renderers.map!(r => r.toJson("")).array)));
                     },
+                    (Tid sender, Activate activate) {
+                        info("rendering.activate");
+                        auto newRenderer = renderers.find!(renderer => renderer.name == activate.profile);
+                        if (newRenderer.empty) {
+                            error("Cannot find %s".format(activate.profile));
+                        } else {
+                            currentRenderer.stop();
+                            currentRenderer = newRenderer.front;
+                            currentRenderer.start();
+                        }
+                    },
+                    (Render r) {
+                        if (currentRenderer) {
+                            auto result = currentRenderer.render();
+                            foreach (idx, p; result) {
+                                strip.set(cast(uint)idx, p);
+                            }
+                            strip.refresh();
+                        }
+                        auto d = sw.peek;
+                        if (d < msPerFrame) {
+                            auto delay = msPerFrame - d;
+                            auto tid = thisTid;
+                            timer.runIn(() => tid.send(Render()), delay);
+                        }
+                    },
                     (Tid sender, Shutdown s) {
                         finished = true;
+                    },
+                    (Variant v) {
+                        error("unknown message ", v);
                     }
                     );
             // dfmt on
         }
+    timer.shutdown();
+    } catch (Exception e) {
+        error(e);
+    }
 }

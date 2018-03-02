@@ -7,3 +7,41 @@ dependency "dyaml" version="~>0.6.5"
 dependency "vibe-d" version="~>0.8.2"
 dependency "mir-algorithm" version="~>0.9.3"
 dependency "undead" version="~>1.0.9"
+
+
+libs "dotstar"
+mainSourceFile "source/app.d"
+targetType "executable"
+
+configuration "application-osx" {
+  platforms "osx"
+  targetPath "out/main/osx"
+  lflags "-Lout/main/osx"
+}
+
+configuration "application-raspi" {
+  platforms "arm"
+  targetPath "out/main/raspi"
+  lflags "-Lout/main/raspi"
+}
+
+configuration "unittest" {
+  targetName "unittest"
+  targetPath "out/test"
+
+  dependency "unit-threaded" version="~>0.7.38"
+  preBuildCommands "dub run unit-threaded -c gen_ut_main -- -f out/generated/unit-threaded/testsuite.d"
+  mainSourceFile "out/generated/unit-threaded/testsuite.d"
+  excludedSourceFiles "source/app.d"
+  lflags "-Lout/main/osx"
+}
+
+configuration "ut" {
+  targetName "ut"
+
+  versions "unitThreadedLight"
+  dependency "unit-threaded" version="~>0.7.38"
+  mainSourceFile "out/generated/unit-threaded/testsuite.d"
+  excludedSourceFiles "source/app.d"
+  lflags "-Lout/main/osx"
+}

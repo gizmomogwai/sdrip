@@ -13,4 +13,3 @@ sdrip3-test-*
 *.obj
 *.lst
 /out
-/sdrip3

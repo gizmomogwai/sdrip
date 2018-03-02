@@ -29,8 +29,8 @@ class RestInterface : Api {
     }
     private void internalActivate(string profile) @trusted {
         import std.stdio, std.string;
-        writeln("activating profile=%s".format(profile));
-        renderer.send(thisTid, Activate(profile));
+        writeln("activating profile=%s on renderer=%s".format(profile, renderer));
+        std.concurrency.send(renderer, thisTid, Activate(profile));
     }
 
     void postSet(Json data) {

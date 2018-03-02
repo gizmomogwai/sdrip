@@ -4,6 +4,9 @@ import std.concurrency;
 import vibe.data.json;
 import state;
 
+struct Render {
+}
+
 struct Blub {
     bool bla;
 }
