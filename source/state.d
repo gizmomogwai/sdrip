@@ -1,6 +1,7 @@
 module state;
 
-struct Parameter {
+struct Parameter
+{
     string name;
     string type;
     string[string] keyValues;
@@ -12,7 +13,8 @@ struct Profile
     Parameter[] parameters;
 }
 
-struct State {
+struct State
+{
     string currentProfile;
     Profile[] profiles;
 }

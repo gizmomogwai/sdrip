@@ -4,17 +4,17 @@ import std.concurrency;
 import vibe.data.json;
 import state;
 
-struct Render {
-}
-
-struct Blub {
+struct Blub
+{
     bool bla;
 }
+
 struct Shutdown
 {
 }
 
-struct Activate {
+struct Activate
+{
     string profile;
 }
 
@@ -32,6 +32,7 @@ struct GetState
 }
 
 import std.traits : Fields;
+
 auto sendReceive(Request)(Tid to, Fields!Request parameters) @trusted
 {
     to.send(thisTid, Request(parameters));

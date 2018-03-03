@@ -14,38 +14,55 @@ interface Api
     void postShutdown() @safe;
 }
 
-class RestInterface : Api {
+class RestInterface : Api
+{
     Tid renderer;
 
-    this(Tid renderer) {
+    this(Tid renderer)
+    {
         this.renderer = renderer;
     }
-    Json getState() {
+
+    Json getState()
+    {
         return sendReceive!GetState(renderer);
     }
 
-    void activate(string profile) {
+    void activate(string profile)
+    {
         internalActivate(profile);
     }
-    private void internalActivate(string profile) @trusted {
+
+    private void internalActivate(string profile) @trusted
+    {
         import std.stdio, std.string;
+
         writeln("activating profile=%s on renderer=%s".format(profile, renderer));
         std.concurrency.send(renderer, thisTid, Activate(profile));
     }
 
-    void postSet(Json data) {
+    void postSet(Json data)
+    {
+        internalPostSet(data);
     }
-    private void internalPostSet(Json data) @trusted {
+
+    private void internalPostSet(Json data) @trusted
+    {
         import std.stdio;
+
         writeln(data);
         renderer.send(thisTid, Set(data));
     }
 
-    void postShutdown() {
+    void postShutdown()
+    {
         internalShutdown();
     }
-    private void internalShutdown() @trusted {
+
+    private void internalShutdown() @trusted
+    {
         import vibe.core.core;
+
         exitEventLoop();
     }
 }

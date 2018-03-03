@@ -39,6 +39,12 @@ class Timer : Thread
         super(&run);
     }
 
+    Timer start()
+    {
+        super.start();
+        return this;
+    }
+
     void runIn(Runnable run, Duration delta)
     {
         runAt(run, Clock.currTime() + delta);

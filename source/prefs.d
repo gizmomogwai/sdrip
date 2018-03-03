@@ -18,8 +18,11 @@ struct Prefs
         data[key] = value;
         return this;
     }
-    string toString() immutable {
+
+    string toString() immutable
+    {
         import std.string;
+
         return "%s".format(data);
     }
 }

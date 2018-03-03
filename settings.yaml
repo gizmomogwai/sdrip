@@ -5,4 +5,4 @@ port: 4567
 #midi_server_host: piano.local
 midi_server_host: 127.0.0.1
 midi_server_port: 55554
-fps: 20
+fps: 30

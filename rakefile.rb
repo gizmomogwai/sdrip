@@ -1,4 +1,10 @@
-out_dir = directory 'out'
+require 'json'
+require "awesome_print"
+
+def out_dir
+  'out'
+end
+directory out_dir
 
 task :favicon do
   sh "wget http://localhost:4567/favicon.png -O #{out_dir}/favicon.png"
@@ -7,17 +13,34 @@ end
 task :state do
   out = "#{out_dir}/state.json"
   sh "wget http://localhost:4567/state -O #{out}"
+  ap JSON.parse(File.read(out))
+end
+
+
+def activate(what)
+  out = "#{out_dir}/activate_#{what}.json"
+  sh "wget -v '--post-data={\"profile\":\"#{what}\"}' --header=Content-Type:application/json http://localhost:4567/activate -O #{out}"
   sh "cat #{out}"
 end
 
 task :activate do
-  out = "#{out_dir}/activate.json"
-  sh "wget '--post-data=profile=test' http://localhost:4567/activate  -O #{out}"
-  sh "cat #{out}"
+  ["rainbow", "red", "green", "blue"].each do |what|
+    activate(what)
+    sleep(2)
+  end
+end
+
+def set(v)
+  sh "wget '--post-data={\"data\":{\"blue.active\":\"#{v}\"}}'  --header=Content-Type:application/json http://localhost:4567/set -O #{out_dir}/set_#{v}.json"
 end
 
 task :set do
-#  sh "wget '--post-data={\"data\":{\"a\":\"b\", \"c\":\"d\"}}'  --header=Content-Type:application/json http://localhost:4567/set -O #{out_dir}/set.json"
+  5.times do
+    set(false)
+    sleep(1);
+    set(true)
+    sleep(1);
+  end
 end
 
 task :shutdown do
