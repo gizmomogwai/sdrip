@@ -26,10 +26,16 @@ struct Index
 {
     struct Result
     {
+        struct Preset
+        {
+            string name;
+            string[string] parameters;
+        }
+
         struct Data
         {
             string current;
-            immutable(string)[] renderer;
+            immutable(Preset)[] all;
         }
 
         Data result;
@@ -124,6 +130,15 @@ struct Apply
 }
 
 import std.concurrency : Tid;
+
+import std.traits : Fields;
+auto sendReceive(Request)(Tid to, Fields!Request parameters)
+{
+    to.send(thisTid, Request(parameters));
+    Request.Result res;
+    receive((Request.Result r) { res = r; });
+    return res.result;
+}
 
 void shutdownChild(Tid tid)
 {

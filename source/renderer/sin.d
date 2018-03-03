@@ -75,7 +75,8 @@ class SinImpl : RendererImpl
             return false;
         }
 
-        switch (path[1]) {
+        switch (path[1])
+        {
         case "color":
             color.value = value.to!Color;
             return true;
@@ -101,7 +102,7 @@ class Sin : Renderer
     public this(string name, uint nrOfLeds, Color color,
             MinMaxWithDefault!float frequency, MinMaxWithDefault!float velocity)
     {
-        super(name, nrOfLeds);
+        super(name, nrOfLeds, );
         this.color = withDefault(color);
         this.frequency = frequency;
         this.velocity = velocity;

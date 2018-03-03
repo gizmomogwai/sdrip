@@ -5,7 +5,7 @@ copyright "Copyright © 2017, Christian Köstlin"
 license "proprietary"
 dependency "undead" version="~>1.0.9"
 dependency "vibe-d" version="~>0.8.1"
-dependency "dyaml" version="~>0.6.3"
+dependency "dyaml" version="~>0.6.5"
 dependency "mir-algorithm" version="~>0.7.0-alpha8"
 
 libs "dotstar"
@@ -15,32 +15,33 @@ mainSourceFile "source/app.d"
 
 configuration "application-osx" {
   platforms "osx"
-  targetPath "out/osx"
-  lflags "-Lout/osx"
+  targetPath "out/main/osx"
+  lflags "-Lout/main/osx"
 }
 
 configuration "application-raspi" {
   platforms "arm"
-  targetPath "out/raspi"
-  lflags "-Lout/raspi"
+  targetPath "out/main/raspi"
+  lflags "-Lout/main/raspi"
 }
 
 configuration "unittest" {
   targetName "unittest"
+  targetPath "out/test"
 
-  dependency "unit-threaded" version="==0.7.32"
-  preBuildCommands "dub run unit-threaded -c gen_ut_main -- -f gen/testsuite.d"
-  mainSourceFile "gen/testsuite.d"
+  dependency "unit-threaded" version="~>0.7.38"
+  preBuildCommands "dub run unit-threaded -c gen_ut_main -- -f out/generated/unit-threaded/testsuite.d"
+  mainSourceFile "out/generated/unit-threaded/testsuite.d"
   excludedSourceFiles "source/app.d"
-  lflags "-Lout/osx"
+  lflags "-Lout/main/osx"
 }
 
 configuration "ut" {
   targetName "ut"
 
   versions "unitThreadedLight"
-  dependency "unit-threaded" version="==0.7.32"
-  mainSourceFile "gen/testsuite.d"
+  dependency "unit-threaded" version="~>0.7.38"
+  mainSourceFile "out/generated/unit-threaded/testsuite.d"
   excludedSourceFiles "source/app.d"
-  lflags "-Lout/osx"
+  lflags "-Lout/main/osx"
 }

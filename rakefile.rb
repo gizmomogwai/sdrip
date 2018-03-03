@@ -1,3 +1,4 @@
+DMD_FLAGS="--nodeps"
 def os
   if RUBY_PLATFORM.include?('darwin')
     return :osx
@@ -21,7 +22,7 @@ task :sync do
 end
 
 def output_folder
-  File.join('out', os.to_s)
+  File.join('out', 'main', os.to_s)
 end
 
 directory output_folder
@@ -36,28 +37,28 @@ f = file "#{output_folder}/libdotstar.a" => ["#{output_folder}/libdotstar.o"] do
 end
 
 file "sdrip" => (Dir.glob("**/*.d") + Dir.glob("**/*.dt") + Dir.glob("dub.*") + Dir.glob("rakefile.rb") + [f, 'source/versioninfo.d']) do
-  sh "dub build --compiler=dmd"
+  sh "dub build --compiler=dmd #{DMD_FLAGS}"
 end
 
 task :build => [:format, lib, 'sdrip', :docs]
 
 desc 'quicktest'
 task :qtest do
-  sh "dub test -c ut"
+  sh "dub test -c ut #{DMD_FLAGS}"
 end
 
 desc 'test'
 task :test do
-  sh "dub test -c ut || dub test"
+  sh "dub test -c ut #{DMD_FLAGS} || dub test #{DMD_FLAGS}"
 end
 
 desc 'docs'
 task :docs do
-  sh "dub build --build=ddox"
+  sh "dub build --build=ddox #{DMD_FLAGS}"
 end
 
 task :run => [:build] do
-  sh "dub run"
+  sh "dub run #{DMD_FLAGS}"
 end
 
 task :default => [:run]

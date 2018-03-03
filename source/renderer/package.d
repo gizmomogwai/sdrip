@@ -14,21 +14,38 @@ class Renderer
 {
     immutable string name;
     immutable uint nrOfLeds;
-    Tid renderer;
+    Property[] properties;
 
-    this(string name, uint nrOfLeds)
+    Tid renderer;
+    bool started = false;
+
+    this(string name, uint nrOfLeds, Property[] properties)
     {
         this.name = name;
         this.nrOfLeds = nrOfLeds;
+        this.properties = properties;
     }
 
     public final Tid start()
     {
         renderer = internalStart();
+        started = true;
         return renderer;
     }
 
     protected abstract Tid internalStart();
+
+    auto getPreset()
+    {
+        import std.stdio;
+        writeln("1");
+        if (started) {
+            auto properties = renderer.sendReceive!(GetProperties)(Prefix())[0];
+            writeln("2");
+            writeln(cast()properties);
+        }
+        return cast(immutable) Index.Result.Preset(name, null);
+    }
 }
 
 class RendererImpl

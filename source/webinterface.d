@@ -23,7 +23,7 @@ class WebInterface
         {
             auto index = theRenderer.sendReceive!Index;
             auto name = index.current;
-            auto renderer = index.renderer;
+            auto renderer = index.all.map!(r => r.name);
             auto active = removeTitle(theRenderer.sendReceive!(GetProperties)(Prefix())[0]);
 
             render!("index.dt", name, renderer, active);
@@ -127,11 +127,11 @@ class WebInterface
 
         try
         {
-            auto name = theRenderer.sendReceive!GetCurrent;
+            auto current = theRenderer.sendReceive!GetCurrent;
             auto properties = theRenderer.sendReceive!(GetProperties)(Prefix());
             auto active = removeTitle(properties[0]);
 
-            render!("current.dt", name, properties, active);
+            render!("current.dt", current, properties, active);
         }
         catch (Throwable t)
         {

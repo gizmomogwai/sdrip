@@ -1,5 +1,43 @@
 * sdrip
 
+* Rest API
+
+http http://localhost:4567/presets ->
+{
+    "all": [
+        {
+            "name": "sin",
+            "parameters": [
+              {
+                "name":"frequency",
+                "type":"float"
+              },
+              {
+                "name":"foregroundColor",
+                "type":"color"
+              }
+            ]
+        },
+        {
+            "name": "sum",
+            "parameters": []
+        },
+        {
+            "name": "midi",
+            "parameters": []
+        },
+        {
+            "name": "rainbow",
+            "parameters": []
+        },
+        {
+            "name": "alarms",
+            "parameters": []
+        }
+    ],
+    "current": "sin"
+
+}
 * Features
 ** support for android app (json rest api)
 ** implement alarm

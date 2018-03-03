@@ -1,20 +1,29 @@
 /// renderloop
 module renderloop;
 
-import prefs;
-import timer;
 import core.thread;
-import stripfactory;
+import core.time;
+import messages;
+import prefs;
+import renderer.alarm;
+import renderer.midi;
+import renderer.rainbow;
+import renderer.sin;
+import renderer.sum;
+import renderer;
+import sdrip;
 import std.concurrency;
 import std.experimental.logger;
 import std.string;
-import messages;
-import sdrip;
-import renderer;
-import renderer.sin;
-import renderer.sum;
-import renderer.midi;
-import renderer.rainbow;
+import stripfactory;
+import timer;
+import std.datetime;
+
+auto getImmutablePreset(Renderer r)
+{
+    immutable res = r.getPreset;
+    return res;
+}
 
 void renderLoop(uint nrOfLeds, immutable(Prefs) settings, shared(Timer) timer)
 {
@@ -28,15 +37,27 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings, shared(Timer) timer)
     // dfmt off
     auto profiles = new Profiles(thisTid,
         [
-            new Sin("sin", nrOfLeds, Color(0xff, 0x80, 0), minMaxWithDefault(2f, 1f, 10f), minMaxWithDefault(1f, -3, 3)),
+            new Sin("sin", nrOfLeds, Color(0xff, 0x80, 0), minMaxWithDefault(2f, 1f, 10f), minMaxWithDefault(1f, -3f, 3f)),
             new Sum("sum", nrOfLeds,
                 [
-                    new Sin("sin1", nrOfLeds, Color(255, 0, 0), minMaxWithDefault(2f, 1f, 10f), minMaxWithDefault(3f, -3, 3)),
+                    new Sin("sin1", nrOfLeds, Color(255, 0, 0), minMaxWithDefault(2f, 1f, 10f), minMaxWithDefault(3f, -3f, 3f)),
                     new Sin("sin2", nrOfLeds, Color(0, 255, 0), minMaxWithDefault(3f, 1f, 10f), minMaxWithDefault(3f, -3f, 3f))
                 ]),
             new Midi("midi", nrOfLeds, settings),
-            new Rainbow("rainbow", nrOfLeds, minMaxWithDefault(1.0f, 1, 10))
-        ]);
+            new Rainbow("rainbow", nrOfLeds, minMaxWithDefault(1.0f, 1, 10)),
+            new Sum("alarms", nrOfLeds,
+                    [
+                     new Alarm("morning", nrOfLeds, new Rainbow("morning rainbow", nrOfLeds,
+                                                                minMaxWithDefault(1f, 1f, 10f)),
+                               withDefault(TimeOfDay(6, 15, 0)),
+                               minMaxWithDefault(dur!"minutes"(15), dur!"minutes"(1), dur!"minutes"(30))),
+                     new Alarm("evening", nrOfLeds, new Sin("gotosleep", nrOfLeds, Color(255, 0, 0),
+                                                            minMaxWithDefault(2f, 1f, 10f),
+                                                            minMaxWithDefault(3f, -3f, 3f)),
+                               withDefault(TimeOfDay(21, 30, 0)),
+                               minMaxWithDefault(dur!"minutes"(15), dur!"minutes"(1), dur!"minutes"(30)))
+                     ])
+         ]);
     // dfmt on
 
     try
@@ -75,7 +96,8 @@ void renderLoop(uint nrOfLeds, immutable(Prefs) settings, shared(Timer) timer)
                 (Tid sender, Index index)
                 {
                     info("index");
-                    sender.send(Index.Result(Index.Result.Data(rendererName,profiles.renderers.map!(p => p.name).array)));
+                    sender.send(Index.Result(Index.Result.Data(rendererName,
+                                                               profiles.renderers.map!(p => p.getImmutablePreset).array)));
                 },
                 (Render render)
                 {
