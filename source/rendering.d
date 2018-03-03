@@ -23,21 +23,6 @@ auto path(string prefix, string name)
     return "%s%s%s".format(prefix, prefix != "" ? "." : "", name);
 }
 
-auto getState(immutable(Prefs) prefs)
-{
-    if (prefs.get("mode", "") == "test")
-    {
-        return State("something", [Profile("profile1", [Parameter("p1", "color",
-                ["value" : "#00ff00"]), Parameter("p2", "color", ["value" : "#ff0000"]),
-                Parameter("p3", "float", ["value" : "1.0", "min" : "0.0", "max" : "10.0"])]),
-                Profile("profile2")]);
-    }
-    else
-    {
-        return State("rainbow1", [Profile("rainbow1"), Profile("rainbow2")]);
-    }
-}
-
 class Property
 {
     abstract Json toJson(string prefix);
@@ -119,9 +104,11 @@ class Renderer
         this.properties = properties ~ active;
     }
 
-    bool isActive() {
+    bool isActive()
+    {
         return active.value;
     }
+
     void toggle()
     {
         active.value = !active.value;
@@ -131,22 +118,25 @@ class Renderer
     {
         auto path = path(prefix, name);
         auto res = Json(["name" : Json(path)]);
-        if (!properties.empty) {
+        if (!properties.empty)
+        {
             res["properties"] = Json(properties.map!(p => p.toJson(path)).array);
         }
         return res;
     }
 
-    final Color[] render(uint size) {
+    final Color[] render(uint size)
+    {
         Color[] res;
         res.length = size;
-        if (!isActive) {
+        if (!isActive)
+        {
             return res;
         }
         return internalRender(res);
     }
-    abstract Color[] internalRender(Color[] destination);
 
+    abstract Color[] internalRender(Color[] destination);
 
     void dispatch(string[string[]] pathToValueMap)
     {

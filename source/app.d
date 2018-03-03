@@ -55,19 +55,23 @@ int main(string[] args)
     import std.process;
     import std.string;
     import std.experimental.logger;
+    import std.algorithm;
 
-    info("sdrip3");
+    info("sdrip");
 
-    auto s = prefs.load("settings.yaml",
-            "settings.yaml.%s".format(execute("hostname").output.strip));
-    if (args.length > 1 && args[1] == "test")
+    if (args.length >= 2)
     {
-        import std.algorithm;
+        import sdrip.misc.tcpreceiver;
 
-        s.add("mode", "test");
+        switch (args[1])
+        {
+        case "tcpreceiver":
+            return sdrip.misc.tcpreceiver.receive(args.remove(1));
+        default:
+            break;
+        }
     }
-    writeln(args);
-    writeln(s);
+    auto s = prefs.load("settings.yaml", "settings.yaml.%s".format(execute("hostname").output.strip));
 
     auto settings = cast(immutable) s;
 

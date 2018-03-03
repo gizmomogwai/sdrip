@@ -6,7 +6,8 @@ import state;
 
 struct Toggle
 {
-    struct Result {
+    struct Result
+    {
         bool result;
     }
 }
@@ -18,7 +19,8 @@ struct Shutdown
 struct Activate
 {
     string profile;
-    struct Result {
+    struct Result
+    {
         bool result;
     }
 }
