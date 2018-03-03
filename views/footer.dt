@@ -34,5 +34,7 @@ script(type="text/javascript").
   });
 
 - import sdrip.packageversion;
-p.
-  Version: sdrip #[a(href="https://github.com/gizmomogwai/sdrip/tree/#{VERSION}") #{VERSION}]
+p(align="right")
+  a(href="/status") Status
+  span &ndash;
+  a(href="https://github.com/gizmomogwai/sdrip/tree/#{VERSION}") #{VERSION}

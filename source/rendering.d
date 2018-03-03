@@ -122,7 +122,7 @@ class Renderer
     Json toJson(string prefix)
     {
         auto path = path(prefix, name);
-        auto res = Json([                "name" : Json(path)]);
+        auto res = Json(["name" : Json(path)]);
         if (!properties.empty) {
             res["properties"] = Json(properties.map!(p => p.toJson(path)).array);
         }

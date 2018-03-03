@@ -9,16 +9,17 @@ html
     h1
       a(href="/") back to index
 
-    h1 Version
-      table
-        th
-          tr
-            td package
-            td version
-            td license
-        - foreach (p; packages)
-          tr
-            td {p.name}
-            td {p.semVer}
-            td {p.license}
+    h1 Versioninfo
+      p
+        table.version
+          th
+            tr
+              td package
+              td version
+              td license
+          - foreach (p; packages)
+            tr
+              td #{p.name}
+              td #{p.semVer}
+              td #{p.license}
   include footer
