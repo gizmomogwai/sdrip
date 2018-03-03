@@ -41,6 +41,7 @@ task :set do
     set(true)
     sleep(1);
   end
+  set(false)
 end
 
 task :shutdown do

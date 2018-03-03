@@ -122,8 +122,11 @@ class Renderer
     Json toJson(string prefix)
     {
         auto path = path(prefix, name);
-        return Json(["name" : Json(path), "properties"
-                : Json(properties.map!(p => p.toJson(path)).array)]);
+        auto res = Json([                "name" : Json(path)]);
+        if (!properties.empty) {
+            res["properties"] = Json(properties.map!(p => p.toJson(path)).array);
+        }
+        return res;
     }
 
     abstract Color[] render(uint size);
@@ -323,7 +326,14 @@ void renderloop(immutable(Prefs) settings)
             receive(
                 (Tid sender, GetState s)
                 {
-                    sender.send(GetState.Result(Json(renderers.map!(r => r.toJson("")).array)));
+                    auto res = Json(
+                        [
+                            "current": Json(currentRenderer.name),
+                            "renderers": Json(renderers.map!(r => r.toJson("")).array)
+                        ]
+                    );
+
+                    sender.send(GetState.Result(res));
                 },
                 (Tid sender, Activate activate)
                 {

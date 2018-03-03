@@ -1,4 +1,4 @@
-name "sdrip3"
+name "sdrip"
 description "Dotstar for dlang."
 authors "Christian Köstlin"
 copyright "Copyright © 2018, Christian Köstlin"
@@ -8,6 +8,13 @@ dependency "vibe-d" version="~>0.8.2"
 dependency "mir-algorithm" version="~>0.9.3"
 dependency "undead" version="~>1.0.9"
 
+dependency "packageversion" version="~>0.0.15"
+subConfiguration "packageversion" "library"
+
+preGenerateCommands "packageversion --packageName=sdrip || dub run packageversion -- --packageName=sdrip"
+sourceFiles "out/generated/packageversion/sdrip/packageversion.d"
+sourcePaths "source" "out/generated/packageversion"
+importPaths "source" "out/generated/packageversion"
 
 libs "dotstar"
 mainSourceFile "source/app.d"

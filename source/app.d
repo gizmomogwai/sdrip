@@ -24,17 +24,17 @@ auto routes(immutable(Prefs) prefs, Tid renderer)
 {
     import vibe.http.router;
 
-    /*
+    import webinterface;
     import vibe.web.web;
-    */
-    import vibe.web.rest;
+
     import restinterface;
+    import vibe.web.rest;
 
     import vibe.http.fileserver;
 
     // dfmt off
     return new URLRouter()
-        //.registerWebInterface(new WebInterface(renderer))
+        .registerWebInterface(new WebInterface(renderer))
         .registerRestInterface(new RestInterface(renderer))
         .get("*", serveStaticFiles("./public/"));
     // dfmt on
