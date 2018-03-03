@@ -119,6 +119,14 @@ class Renderer
         this.properties = properties ~ active;
     }
 
+    bool isActive() {
+        return active.value;
+    }
+    void toggle()
+    {
+        active.value = !active.value;
+    }
+
     Json toJson(string prefix)
     {
         auto path = path(prefix, name);
@@ -129,7 +137,16 @@ class Renderer
         return res;
     }
 
-    abstract Color[] render(uint size);
+    final Color[] render(uint size) {
+        Color[] res;
+        res.length = size;
+        if (!isActive) {
+            return res;
+        }
+        return internalRender(res);
+    }
+    abstract Color[] internalRender(Color[] destination);
+
 
     void dispatch(string[string[]] pathToValueMap)
     {
@@ -169,6 +186,7 @@ class Renderer
 
     void start()
     {
+        active.value = true;
     }
 
     void stop()
@@ -197,16 +215,9 @@ class ColorRenderer : Renderer
         super(name, [this.color]);
     }
 
-    override Color[] render(uint size)
+    override Color[] internalRender(Color[] res)
     {
-        Color[] res;
-        res.length = size;
-        auto v = (cast(WithDefault!bool) properties[$ - 1]).value;
-        if (!v)
-        {
-            return res;
-        }
-
+        const size = res.length;
         auto c = Color(color.value);
         for (int i = 0; i < size; ++i)
         {
@@ -241,8 +252,9 @@ class RainbowRenderer : Renderer
         return lround(v).to!int;
     }
 
-    override Color[] render(uint size)
+    override Color[] internalRender(Color[] res)
     {
+        const size = res.length;
         import std.range;
 
         phase += velocity.value;
@@ -269,18 +281,11 @@ class DummyRenderer : Renderer
         super("dummy", []);
     }
 
-    override Color[] render(uint size)
+    override Color[] internalRender(Color[] res)
     {
-        return null;
+        return res;
     }
 
-    override void start()
-    {
-    }
-
-    override void stop()
-    {
-    }
 }
 
 struct Render
@@ -328,12 +333,17 @@ void renderloop(immutable(Prefs) settings)
                 {
                     auto res = Json(
                         [
-                            "current": Json(currentRenderer.name),
+                            "current": Json(["name" : Json(currentRenderer.name), "active" : Json(currentRenderer.isActive)]),
                             "renderers": Json(renderers.map!(r => r.toJson("")).array)
                         ]
                     );
 
                     sender.send(GetState.Result(res));
+                },
+                (Tid sender, Toggle toggle)
+                {
+                    currentRenderer.toggle;
+                    sender.send(Toggle.Result());
                 },
                 (Tid sender, Activate activate)
                 {
@@ -351,6 +361,7 @@ void renderloop(immutable(Prefs) settings)
                         renderId++;
                         thisTid.send(Render(renderId));
                     }
+                    sender.send(Activate.Result());
                 },
                 (Tid sender, Set set)
                 {

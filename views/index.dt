@@ -7,13 +7,21 @@ html
     link(rel="icon", type="image/png", href="/favicon.png")
   body
     h1& welcome
-    h1& current profile:
-      a(href="/current") #{current}
-    form(action="/activate", method="post")
+
+    form(action="/toggle", method="post")
+      h1& current profile
+        a(href="/toggle") #{current["name"].to!string}
+        span
+          - if (current["active"].to!bool)
+            input(type="checkbox", name=current["name"].to!string ~ ".active", checked, data-toggle="toggle", onChange="this.form.submit();")
+          - else
+            input(type="checkbox", name=current["name"].to!string ~ ".active", data-toggle="toggle", onChange="this.form.submit();")
+          input(type="hidden", name=current["name"].to!string ~ ".active", value="off")
+    h1 all profiles
     - foreach (r; renderers)
-      form(action="/profile", method="post")
-        input(type="hidden", name="name", value="#{r}")
-        input(type="submit", value="#{r[\"name\"].to!string}", style="height:100px; width:500px")
+      form(action="/activate", method="post")
+        input(type="hidden", name="name", value=r["name"].to!string)
+        input(type="submit", value=r["name"].to!string, style="height:100px; width:500px")
     form(action="/shutdown", method="post")
       input(type="submit", value="shutdown", style="height:100px; width:500px")
   include footer

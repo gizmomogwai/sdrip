@@ -11,32 +11,43 @@ class WebInterface {
     {
         this.renderer = renderer;
     }
-
-    void get()
+    public void postActivate(HTTPServerRequest request)
+    {
+        info("WebInterface:postActivate ", request.form);
+        renderer.sendReceive!Activate(request.form["name"]);
+        renderCurrent();
+    }
+    public void get()
     {
         try
         {
-            auto status = renderer.sendReceive!GetState;
-            auto current = status["current"].to!string;
-            auto renderers = status["renderers"];
-            import std.stdio;
-            writeln(current);
-            foreach (r; renderers) {
-                writeln("renderer: ", r);
-            }
-            render!("index.dt", current, renderers);
+            renderCurrent();
         }
         catch (Exception e)
         {
             error(e);
         }
     }
-    void getStatus()
+    public void postToggle(HTTPServerRequest request)
+    {
+        info("WebInterface:postToggle ", request.form);
+        renderer.sendReceive!Toggle;
+        get();
+    }
+
+    public void getStatus()
     {
         import packageversion;
         import std.algorithm;
         import std.stdio;
         auto packages = packageversion.getPackages.sort!("a.name < b. name");
         render!("status.dt", packages);
+    }
+    void renderCurrent()
+    {
+        auto status = renderer.sendReceive!GetState;
+        auto current = status["current"];
+        auto renderers = status["renderers"];
+        render!("index.dt", current, renderers);
     }
 }

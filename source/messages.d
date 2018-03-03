@@ -4,9 +4,11 @@ import std.concurrency;
 import vibe.data.json;
 import state;
 
-struct Blub
+struct Toggle
 {
-    bool bla;
+    struct Result {
+        bool result;
+    }
 }
 
 struct Shutdown
@@ -16,6 +18,9 @@ struct Shutdown
 struct Activate
 {
     string profile;
+    struct Result {
+        bool result;
+    }
 }
 
 struct Set
