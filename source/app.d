@@ -71,7 +71,8 @@ int main(string[] args)
             break;
         }
     }
-    auto s = prefs.load("settings.yaml", "settings.yaml.%s".format(execute("hostname").output.strip));
+    auto s = prefs.load("settings.yaml",
+            "settings.yaml.%s".format(execute("hostname").output.strip));
 
     auto settings = cast(immutable) s;
 

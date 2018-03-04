@@ -16,6 +16,16 @@ struct Shutdown
 {
 }
 
+struct Apply
+{
+    string key;
+    string value;
+    struct Result
+    {
+        bool result;
+    }
+}
+
 struct Activate
 {
     string profile;

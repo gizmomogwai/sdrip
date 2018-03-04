@@ -1,0 +1,19 @@
+-import std.string;
+-import std.stdio;
+-import htmlhelper;
+doctype html
+html
+  head
+    title Current profile
+    include jquery
+    include bootstrap
+  body
+    h1
+      a(href="/") back to index
+    h1 Current profile
+      form(action="/set", method="post")
+        h2 #{current["name"].to!string}
+        - foreach (p; current["properties"])
+          p !{p.renderProperty}
+        input(type="submit", value="apply", style="height:100px; width:500px")
+    include footer

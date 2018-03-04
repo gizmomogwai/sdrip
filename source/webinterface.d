@@ -3,6 +3,7 @@ module webinterface;
 import std.concurrency;
 import std.experimental.logger;
 import messages;
+
 import vibe.vibe;
 
 class WebInterface
@@ -22,14 +23,12 @@ class WebInterface
 
     public void get()
     {
-        try
-        {
-            renderCurrent();
-        }
-        catch (Exception e)
-        {
-            error(e);
-        }
+        renderAll();
+    }
+
+    public void getCurrent()
+    {
+        renderCurrent();
     }
 
     public void postToggle(HTTPServerRequest request)
@@ -37,6 +36,30 @@ class WebInterface
         info("WebInterface:postToggle ", request.form);
         renderer.sendReceive!Toggle;
         get();
+    }
+
+    private auto filterDoubleKeys(HTTPServerRequest request)
+    {
+        string[string] res;
+        foreach (k, v; request.form)
+        {
+            if (k !in res)
+            {
+                res[k] = v;
+            }
+        }
+        return res;
+    }
+
+    public void postSet(HTTPServerRequest request)
+    {
+        info(request.form);
+        info(request);
+        foreach (k, v; filterDoubleKeys(request))
+        {
+            renderer.sendReceive!Apply(k, v);
+        }
+        renderCurrent();
     }
 
     public void getStatus()
@@ -49,11 +72,36 @@ class WebInterface
         render!("status.dt", packages);
     }
 
-    void renderCurrent()
+    void renderAll()
     {
         auto status = renderer.sendReceive!GetState;
         auto current = status["current"];
         auto renderers = status["renderers"];
         render!("index.dt", current, renderers);
     }
+
+    void renderCurrent()
+    {
+        auto status = renderer.sendReceive!GetState;
+        auto currentName = status["current"]["name"].to!string;
+        auto renderers = status["renderers"];
+        import std.stdio;
+
+        foreach (current; renderers)
+        {
+            writeln(current);
+            if (current["name"].to!string == currentName)
+            {
+                renderCurrent(current);
+                return;
+            }
+        }
+        warning("Cannot find %s", currentName);
+    }
+
+    private void renderCurrent(Json current)
+    {
+        render!("current.dt", current);
+    }
+
 }

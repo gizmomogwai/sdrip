@@ -1,3 +1,5 @@
+-import htmlhelper;
+
 doctype html
 html
   head
@@ -9,14 +11,9 @@ html
     h1& welcome
 
     form(action="/toggle", method="post")
-      h1& current profile
-        a(href="/toggle") #{current["name"].to!string}
-        span
-          - if (current["active"].to!bool)
-            input(type="checkbox", name=current["name"].to!string ~ ".active", checked, data-toggle="toggle", onChange="this.form.submit();")
-          - else
-            input(type="checkbox", name=current["name"].to!string ~ ".active", data-toggle="toggle", onChange="this.form.submit();")
-          input(type="hidden", name=current["name"].to!string ~ ".active", value="off")
+      h1& current profile:
+        a(href="/current") #{current["name"].to!string}
+        span !{renderBoolField(current["name"].to!string ~ ".active", current["active"].to!bool)}
     h1 all profiles
     - foreach (r; renderers)
       form(action="/activate", method="post")

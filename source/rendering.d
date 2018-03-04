@@ -58,6 +58,17 @@ class WithDefault(T) : Property
     {
         if (name == key)
         {
+            if (type == "boolean")
+            {
+                if (value == "on")
+                {
+                    value = "true";
+                }
+                else if (value == "off")
+                {
+                    value = "false";
+                }
+            }
             trace(" applying ", key, " -> ", value);
             this.value = value.to!T;
         }
@@ -140,7 +151,7 @@ class Renderer
 
     void dispatch(string[string[]] pathToValueMap)
     {
-        writeln("dispatch on ", name);
+        info("dispatch on %s: %s".format(name, pathToValueMap));
         foreach (path, value; pathToValueMap)
         {
             apply(path, value);
@@ -149,6 +160,7 @@ class Renderer
 
     private void apply(const(string)[] path, string value)
     {
+        info("apply %s -> %s".format(path, value));
         if (!path)
         {
             return;
@@ -223,7 +235,6 @@ class RainbowRenderer : Renderer
     float phase = 0.0f;
     this(string name)
     {
-        writeln(velocity);
         super(name, [velocity]);
     }
 
@@ -257,13 +268,6 @@ class RainbowRenderer : Renderer
     }
 }
 
-@("colorrenderer") unittest
-{
-    import std.stdio;
-
-    writeln(new ColorRenderer("red", "#ab0000").toJson("prefix"));
-}
-
 class DummyRenderer : Renderer
 {
     this()
@@ -285,6 +289,18 @@ struct Render
     {
         return this.id == id;
     }
+}
+
+auto toPath(string key)
+{
+    return key.split(".").array.idup;
+}
+
+@("toPath") unittest
+{
+    import unit_threaded;
+
+    "a.b.c".toPath.shouldEqual(["a", "b", "c"]);
 }
 
 void renderloop(immutable(Prefs) settings)
@@ -359,10 +375,14 @@ void renderloop(immutable(Prefs) settings)
                     // transform from string[string] to string[path]
                     string[string[]] pathToValueMap;
                     foreach (key, value; set.data.byKeyValue) {
-                        pathToValueMap[key.split(".").array.idup] = value.to!string;
+                        pathToValueMap[key.toPath] = value.to!string;
                     }
-                    writeln("dispatching ", pathToValueMap);
                     currentRenderer.dispatch(pathToValueMap);
+                },
+                (Tid sender, Apply apply)
+                {
+                    currentRenderer.apply(apply.key.toPath, apply.value);
+                    sender.send(apply.Result(true));
                 },
                 (Render render)
                 {

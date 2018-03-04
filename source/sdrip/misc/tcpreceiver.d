@@ -10,7 +10,7 @@ import undead.socketstream;
 
 int receive(string[] args)
 {
-    auto settings = cast(immutable)prefs.load("settings.yaml");
+    auto settings = cast(immutable) prefs.load("settings.yaml");
     auto nrOfLeds = settings.get("nr_of_leds").to!uint;
     auto strip = new SpiStrip(nrOfLeds);
 
