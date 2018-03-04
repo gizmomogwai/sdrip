@@ -38,6 +38,10 @@ struct Activate
 struct Set
 {
     Json data;
+    struct Result
+    {
+        bool result;
+    }
 }
 
 struct GetState

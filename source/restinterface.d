@@ -8,55 +8,55 @@ import vibe.data.json;
 interface Api
 {
     Json getState() @safe;
-    void activate(string profile) @safe;
-    void postSet(Json data) @safe;
+    Json postActivate(string renderer) @safe;
+    Json putSet(Json data) @safe;
 
-    void postShutdown() @safe;
+    bool postShutdown() @safe;
 }
 
 class RestInterface : Api
 {
-    Tid renderer;
+    Tid theRenderer;
 
     this(Tid renderer)
     {
-        this.renderer = renderer;
+        this.theRenderer = renderer;
     }
 
     Json getState()
     {
-        return sendReceive!GetState(renderer);
+        return theRenderer.sendReceive!GetState;
     }
 
-    void activate(string profile)
-    {
-        internalActivate(profile);
-    }
-
-    private void internalActivate(string profile) @trusted
-    {
-        import std.stdio, std.string;
-
-        writeln("activating profile=%s on renderer=%s".format(profile, renderer));
-        std.concurrency.send(renderer, thisTid, Activate(profile));
-    }
-
-    void postSet(Json data)
-    {
-        internalPostSet(data);
-    }
-
-    private void internalPostSet(Json data) @trusted
+    Json postActivate(string renderer)
     {
         import std.stdio;
 
-        writeln(data);
-        renderer.send(thisTid, Set(data));
+        writeln(renderer.to!string);
+        internalActivate(renderer);
+        return theRenderer.sendReceive!GetState;
     }
 
-    void postShutdown()
+    private void internalActivate(string renderer) @trusted
+    {
+        theRenderer.sendReceive!Activate(renderer);
+    }
+
+    Json putSet(Json data)
+    {
+        internalPutSet(data);
+        return theRenderer.sendReceive!GetState;
+    }
+
+    private void internalPutSet(Json data) @trusted
+    {
+        theRenderer.sendReceive!Set(data);
+    }
+
+    bool postShutdown()
     {
         internalShutdown();
+        return true;
     }
 
     private void internalShutdown() @trusted

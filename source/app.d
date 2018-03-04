@@ -35,7 +35,7 @@ auto routes(immutable(Prefs) prefs, Tid renderer)
     // dfmt off
     return new URLRouter()
         .registerWebInterface(new WebInterface(renderer))
-        .registerRestInterface(new RestInterface(renderer))
+        .registerRestInterface(new RestInterface(renderer), "api")
         .get("*", serveStaticFiles("./public/"));
     // dfmt on
 }

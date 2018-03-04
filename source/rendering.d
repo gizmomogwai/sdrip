@@ -378,6 +378,7 @@ void renderloop(immutable(Prefs) settings)
                         pathToValueMap[key.toPath] = value.to!string;
                     }
                     currentRenderer.dispatch(pathToValueMap);
+                    sender.send(set.Result(true));
                 },
                 (Tid sender, Apply apply)
                 {
