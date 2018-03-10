@@ -4,7 +4,7 @@ authors "Christian Köstlin"
 copyright "Copyright © 2018, Christian Köstlin"
 license "MIT"
 dependency "dyaml" version="~>0.6.5"
-dependency "vibe-d" version="~>0.8.2"
+dependency "vibe-d" version="~>0.8.3"
 dependency "mir-algorithm" version="~>0.9.3"
 dependency "undead" version="~>1.0.9"
 

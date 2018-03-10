@@ -92,10 +92,7 @@ int main(string[] args)
 
     import vibe.core.core : runApplication;
 
-    auto unrecognized = (string[] unrecognizedArgs) {
-        writeln(args, unrecognizedArgs);
-    };
-    auto status = runApplication(unrecognized);
+    auto status = runApplication(null);
 
     renderer.shutdownChild();
 
