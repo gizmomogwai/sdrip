@@ -2,23 +2,7 @@ import std.stdio;
 
 import std.concurrency;
 import prefs;
-import state;
 import messages;
-
-auto getState(T)(T prefs)
-{
-    if (prefs.get("mode", "") == "test")
-    {
-        return State("something", [Profile("profile1", [Parameter("p1", "color",
-                ["value" : "#00ff00"]), Parameter("p2", "color", ["value" : "#ff0000"]),
-                Parameter("p3", "float", ["value" : "1.0", "min" : "0.0", "max" : "10.0"])]),
-                Profile("profile2")]);
-    }
-    else
-    {
-        return State("rainbow1", [Profile("rainbow1"), Profile("rainbow2")]);
-    }
-}
 
 auto routes(immutable(Prefs) prefs, Tid renderer)
 {
@@ -75,8 +59,6 @@ int main(string[] args)
             "settings.yaml.%s".format(execute("hostname").output.strip));
 
     auto settings = cast(immutable) s;
-
-    auto state = getState(settings);
 
     import rendering;
 
