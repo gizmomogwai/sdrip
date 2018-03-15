@@ -45,8 +45,14 @@ class WithDefault(T) : Property
 
     override Json toJson(string prefix)
     {
-        return Json(["name" : Json(path(prefix, name)), "type" : Json(type),
-                "value" : Json(value), "defaultValue" : Json(defaultValue)]);
+        // dfmt off
+        return Json([
+                        "name" : Json(path(prefix, name)),
+                        "type" : Json(type),
+                        "value" : Json(value),
+                        "defaultValue" : Json(defaultValue),
+                    ]);
+        // dfmt on
     }
 
     override string toString()
@@ -84,25 +90,40 @@ static withDefault(T)(string name, string type, T value, T defaultValue)
 {
     return new WithDefault!(T)(name, type, value, defaultValue);
 }
-/*
-  class MinMaxWithDefault(T) : WithDefault
-  {
-  T min;
-  T max;
-  override Json toJson(string prefix) {
-  }
-  }
 
-  static minMaxWithDefault(T)(string name, T v, T min, T max)
-  {
-  return new MinMaxWithDefault!(T)(name, v, v, min, max);
-  }
+class MinMaxWithDefault(T) : WithDefault!(T)
+{
+    T min;
+    T max;
+    this(string name, string type, T value, T defaultValue, T min, T max) {
+        super(name, type, value, defaultValue);
+        this.min = min;
+        this.max = max;
+    }
+    override Json toJson(string prefix) {
+        // dfmt off
+        return Json([
+                        "name" : Json(path(prefix, name)),
+                        "type" : Json(type),
+                        "value" : Json(value),
+                        "defaultValue" : Json(defaultValue),
+                        "min" : Json(min),
+                        "max" : Json(max),
+                    ]);
+        // dfmt on
+    }
+}
 
-  static minMaxWithDefault(T)(string name, T v, T defaultValue, T min, T max)
-  {
-  return new MinMaxWithDefault!(T)(name, v, defaultValue, min, max);
-  }
-*/
+static minMaxWithDefault(T)(string name, string type, T v, T min, T max)
+{
+    return new MinMaxWithDefault!(T)(name, type, v, v, min, max);
+}
+
+static minMaxWithDefault(T)(string name, string type, T v, T defaultValue, T min, T max)
+{
+    return new MinMaxWithDefault!(T)(name, type, v, defaultValue, min, max);
+}
+
 class Renderer
 {
     string name;
@@ -231,7 +252,7 @@ class ColorRenderer : Renderer
 
 class RainbowRenderer : Renderer
 {
-    WithDefault!float velocity = withDefault("velocity", "float", 0.2f);
+    MinMaxWithDefault!float velocity = minMaxWithDefault("velocity", "float", 0.2f, 0.2f, -3.0f, 3.0f);
     float phase = 0.0f;
     this(string name)
     {
