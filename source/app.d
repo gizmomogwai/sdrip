@@ -29,9 +29,8 @@ auto httpSettings(T)(T prefs)
     import vibe.http.server;
     import std.conv;
 
-    auto httpSettings = new HTTPServerSettings;
-    httpSettings.port = prefs.get("port").to!ushort;
-    return httpSettings;
+    auto bind = prefs.get("bind").to!string;
+    return new HTTPServerSettings(bind);
 }
 
 int main(string[] args)

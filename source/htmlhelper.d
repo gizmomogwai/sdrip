@@ -2,6 +2,7 @@ module htmlhelper;
 
 import vibe.data.json;
 import std.string;
+import std.conv;
 
 string renderBoolField(S, T)(S name, T value)
 {

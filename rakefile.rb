@@ -107,3 +107,35 @@ end
 task :build => [f, 'out/main/sdrip3']
 
 task :default => [:build, :test]
+
+desc 'install needed gems'
+task :install_gems do
+  sh "gem install sshkit"
+end
+
+desc 'build for raspi'
+task :build_for_raspi do
+  sh "raspi.sh make"
+  sh "raspi.sh dub build --compiler=ldc-raspi"
+end
+
+desc 'deploy to targets'
+task :deploy do
+  require 'sshkit'
+  require 'sshkit/dsl'
+  include SSHKit::DSL
+  on ['wohnzimmer', 'schlafzimmer'], in: :sequence, wait: 5 do |host|
+    puts "Working on #{host}"
+    execute('sudo systemctl stop sdrip')
+    execute('rm -rf /home/osmc/sdrip')
+    execute('mkdir -p /home/osmc/sdrip')
+    (Dir.glob("deployment/#{host}/*") + Dir.glob("deployment/*"))
+      .each do |file|
+      if File.file?(file)
+        upload! file, "/home/osmc/sdrip/"
+      end
+    end
+    upload! "out/main/raspi/sdrip", "/home/osmc/sdrip/"
+    execute('sudo systemctl start sdrip')
+  end
+end

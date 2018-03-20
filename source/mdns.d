@@ -1,6 +1,12 @@
 module mdns;
 
 import prefs;
+import std.string;
+
+auto getPort(string bind) {
+  auto idx = bind.lastIndexOf(":");
+  return bind[idx..$];
+}
 
 auto announceServer(immutable(Prefs) settings)
 {
@@ -15,5 +21,5 @@ auto announceServer(immutable(Prefs) settings)
     {
         auto command = "dns-sd -R %s _dotstar._tcp local %s";
     }
-    return spawnShell(command.format(settings.get("location"), settings.get("port")));
+    return spawnShell(command.format(settings.get("location"), settings.get("bind").getPort));
 }

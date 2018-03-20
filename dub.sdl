@@ -30,6 +30,8 @@ configuration "application-raspi" {
   platforms "arm"
   targetPath "out/main/raspi"
   lflags "-Lout/main/raspi"
+  versions "VibeNoSSL"
+  versions "VibeNoMongo"
 }
 
 configuration "unittest" {

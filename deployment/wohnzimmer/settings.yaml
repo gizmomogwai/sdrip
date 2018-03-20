@@ -1,0 +1,5 @@
+---
+location: wohnzimmer
+bind: 0.0.0.0:4567
+nr_of_leds: 120
+fps: 30

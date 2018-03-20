@@ -14,3 +14,4 @@ sdrip3-test-*
 *.lst
 /out
 *.local
+/.dub-raspi
