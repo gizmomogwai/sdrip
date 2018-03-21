@@ -124,8 +124,9 @@ task :deploy do
   require 'sshkit'
   require 'sshkit/dsl'
   include SSHKit::DSL
+  users = {"wohnzimmer" => "user1"}
   on ['wohnzimmer', 'schlafzimmer'], in: :sequence, wait: 5 do |host|
-    puts "Working on #{host}"
+    info "Working on #{host}"
     execute('sudo systemctl stop sdrip')
     execute('rm -rf /home/osmc/sdrip')
     execute('mkdir -p /home/osmc/sdrip')

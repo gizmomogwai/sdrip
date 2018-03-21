@@ -1,5 +1,5 @@
 ---
 location: schlafzimmer
+bind: 0.0.0.0:4567
 nr_of_leds: 120
-port: 0.0.0.0:4567
 fps: 30

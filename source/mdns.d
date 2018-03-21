@@ -5,9 +5,13 @@ import std.string;
 
 auto getPort(string bind) {
   auto idx = bind.lastIndexOf(":");
-  return bind[idx..$];
+  return bind[idx+1..$];
 }
 
+@("getPortFromBind") unittest {
+  import unit_threaded;
+  getPort("0.0.0.0:10").shouldEqual("10");
+}
 auto announceServer(immutable(Prefs) settings)
 {
     import std.process;
