@@ -1,4 +1,4 @@
-require 'json'
+require "json"
 require "awesome_print"
 
 def rest(endpoint)
@@ -6,14 +6,14 @@ def rest(endpoint)
 end
 
 def out_dir
-  'out'
+  "out"
 end
 directory out_dir
 
 
 namespace :test do
   namespace :web do
-    desc 'favicon'
+    desc "favicon"
     task :favicon do
       sh "wget http://localhost:4567/favicon.png -O #{out_dir}/favicon.png"
     end
@@ -126,31 +126,41 @@ task :build_for_raspi_with_docker do
   sh "docker run --rm -it --mount  type=bind,src=(pwd),dst=/ws cross-ldc:0.0.1"
 end
 
+require "sshkit"
+require "sshkit/dsl"
+include SSHKit::DSL
+
 hosts = [
-  "slideshowAtHome",
+  "wohnzimmer",
   "seehaus-piano",
 ].each do |host|
 
   namespace :deploy do
     desc "Deploy to #{host}"
     task host do
-      require "sshkit"
-      require "sshkit/dsl"
-      include SSHKit::DSL
       on [host] do
         info "Working on #{host}"
         execute("sudo systemctl stop sdrip")
         execute("rm -rf ~/sdrip")
         execute("mkdir ~/sdrip")
         Dir.glob("source/deployment/sites/#{host}/*").each do |file|
-          upload!(file, "~/sdrip/")
+          puts "uploading #{file}"
+          puts capture "ls -l /home/osmc"
+          upload!(file, "/home/osmc/sdrip/")
         end
-        upload!("out/main/raspi/sdrip", "~/sdrip/")
+        upload!("out/main/raspi/sdrip", "/home/osmc/sdrip/")
         execute("sudo systemctl start sdrip")
       end
     end
   end
-
+  namespace :status do
+    desc "Status of #{host}"
+    task host do
+      on [host] do
+        puts capture("systemctl status sdrip")
+      end
+    end
+  end
 end
 
 
