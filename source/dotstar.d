@@ -10,7 +10,6 @@ import std.experimental.logger;
 import std.math;
 import std.socket;
 import std.string;
-import undead.socketstream;
 
 extern (C)
 {
@@ -40,9 +39,9 @@ abstract class Strip
     {
         auto i = idx * 4;
         ledBuffer[i] = a;
-        ledBuffer[i + 1] = r;
+        ledBuffer[i + 1] = b;
         ledBuffer[i + 2] = g;
-        ledBuffer[i + 3] = b;
+        ledBuffer[i + 3] = r;
         return this;
     }
 
@@ -116,7 +115,7 @@ class SpiStrip : Strip
         destroySpi(spi);
     }
 }
-
+/+
 class TcpStrip : Strip
 {
 
@@ -148,6 +147,7 @@ class TcpStrip : Strip
         stream.close();
     }
 }
++/
 
 class DummyStrip : Strip
 {
@@ -380,12 +380,14 @@ Strip createStrip(immutable(Prefs) settings)
         info("dummystrip");
         return new DummyStrip(nrOfLeds);
     }
+    /+
     if (settings.get("tcpstrip") != "")
     {
         auto host = settings.get("tcpstrip");
         info("tcpstrip: ", host);
         return new TcpStrip(nrOfLeds, host);
     }
++/
     info("spistrip");
     return new SpiStrip(nrOfLeds);
 }

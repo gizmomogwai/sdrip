@@ -1,2 +1,6 @@
+* Installation
+** downgrade raspi kernel to sudo something 4.19 with rpi-update e1050e94821a70b2e4c72b318d6c6c968552e9a2
+
+
 * TODOs
-** TODO add min max to float values
+** TODO add min max to float value

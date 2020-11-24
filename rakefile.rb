@@ -83,6 +83,8 @@ def os
     return :raspi
   end
 
+  return :linux
+
   raise "Platform not supported: #{RUBY_PLATFORM}"
 end
 def output_folder
@@ -119,7 +121,40 @@ task :build_for_raspi do
   sh "raspi.sh dub build --compiler=ldc-raspi"
 end
 
-desc 'deploy to targets'
+desc "build for raspi"
+task :build_for_raspi_with_docker do
+  sh "docker run --rm -it --mount  type=bind,src=(pwd),dst=/ws cross-ldc:0.0.1"
+end
+
+hosts = [
+  "slideshowAtHome",
+  "seehaus-piano",
+].each do |host|
+
+  namespace :deploy do
+    desc "Deploy to #{host}"
+    task host do
+      require "sshkit"
+      require "sshkit/dsl"
+      include SSHKit::DSL
+      on [host] do
+        info "Working on #{host}"
+        execute("sudo systemctl stop sdrip")
+        execute("rm -rf ~/sdrip")
+        execute("mkdir ~/sdrip")
+        Dir.glob("source/deployment/sites/#{host}/*").each do |file|
+          upload!(file, "~/sdrip/")
+        end
+        upload!("out/main/raspi/sdrip", "~/sdrip/")
+        execute("sudo systemctl start sdrip")
+      end
+    end
+  end
+
+end
+
+
+desc "deploy to targets"
 task :deploy do
   require 'sshkit'
   require 'sshkit/dsl'
@@ -130,7 +165,7 @@ task :deploy do
     execute('sudo systemctl stop sdrip')
     execute('rm -rf /home/osmc/sdrip')
     execute('mkdir -p /home/osmc/sdrip')
-    (Dir.glob("deployment/#{host}/*") + Dir.glob("deployment/*"))
+    (Dir.glob("source/deployment/sites/#{host}/*") + Dir.glob("deployment/*"))
       .each do |file|
       if File.file?(file)
         upload! file, "/home/osmc/sdrip/"

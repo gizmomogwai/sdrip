@@ -16,10 +16,11 @@ auto routes(immutable(Prefs) prefs, Tid renderer)
 
     import vibe.http.fileserver;
 
+    auto webInterface = new WebInterface(renderer);
     // dfmt off
     return new URLRouter()
-        .registerWebInterface(new WebInterface(renderer))
-        .registerRestInterface(new RestInterface(renderer), "api")
+        .registerWebInterface(webInterface)
+	.registerRestInterface(new RestInterface(renderer), "api")
         .get("*", serveStaticFiles("./public/"));
     // dfmt on
 }
@@ -41,7 +42,7 @@ int main(string[] args)
     import std.algorithm;
 
     info("sdrip");
-
+/+
     if (args.length >= 2)
     {
         import sdrip.misc.tcpreceiver;
@@ -54,6 +55,7 @@ int main(string[] args)
             break;
         }
     }
++/
     auto s = prefs.load("settings.yaml",
             "settings.yaml.%s".format(execute("hostname").output.strip));
 

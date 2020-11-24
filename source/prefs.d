@@ -44,7 +44,7 @@ auto load(T...)(T files)
             warning("file '%s' does not exist".format(file));
             continue;
         }
-        auto data = new Loader(file).load();
+        auto data = Loader.fromFile(file).load();
         foreach (string key, string value; data)
         {
             res = res.add(key, value);

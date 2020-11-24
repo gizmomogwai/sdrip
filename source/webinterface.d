@@ -41,7 +41,7 @@ class WebInterface
     private auto filterDoubleKeys(HTTPServerRequest request)
     {
         string[string] res;
-        foreach (k, v; request.form)
+        foreach (k, v; request.form.byKeyValue)
         {
             if (k !in res)
             {
