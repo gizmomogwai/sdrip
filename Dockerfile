@@ -7,8 +7,6 @@ RUN chmod --recursive 777 /dlang
 
 COPY ldc.conf /ldc.conf
 RUN cat /ldc.conf >> /dlang/ldc-1.24.0/etc/ldc2.conf
-COPY test.d /test.d
-
 
 ENV PATH=/dlang/ldc-1.24.0/bin:/usr/local/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf/bin:$PATH
 ENV DMD=ldmd2

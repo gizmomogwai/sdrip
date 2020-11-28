@@ -130,6 +130,10 @@ task :build_for_raspi_with_docker do
   sh "docker run -u#{uid}:#{uid} --rm --interactive --tty --mount type=bind,src=#{Dir.pwd},dst=/ws cross-ldc:0.0.1"
 end
 
+desc "Build cross ldc docker image"
+task :build_docker_image do
+  sh "docker build . -t cross-ldc:0.0.1"
+end
 require "sshkit"
 require "sshkit/dsl"
 include SSHKit::DSL
