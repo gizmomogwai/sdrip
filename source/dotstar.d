@@ -11,15 +11,92 @@ import std.math;
 import std.socket;
 import std.string;
 
-extern (C)
+/+
++ References:
++ - https://www.kernel.org/doc/Documentation/spi/spidev
++ - https://cdn-shop.adafruit.com/datasheets/APA102.pdf
++ - https://github.com/adafruit/Adafruit_DotStar_Pi/blob/master/dotstar.c
++ - https://cpldcpu.wordpress.com/2014/11/30/understanding-the-apa102-superled/
++/
+class Spi
 {
-    struct Spi
+    struct IocTransfer
     {
+        ulong txBuffer;
+        ulong rxBuffer;
+        uint length;
+        uint speedInHz;
+        ushort delayInUSeconds;
+        ubyte bitsPerWord;
+        ubyte csChange;
+        ubyte txNBits;
+        ubyte rxNBits;
+        ubyte wordDelayInUSeconds;
+        ubyte padding;
     }
 
-    Spi* createSpi();
-    void destroySpi(Spi* spi);
-    int writeSpi(Spi* spi, ubyte* pixels, uint nrOfPixels);
+    enum SPI_IOC_MAGIC = 'k';
+    enum SPI_MODE_0 = 0;
+    enum SPI_NO_CS = 0x40;
+    enum SPI_IOC_WR_MODE = _IOW!(ubyte)(SPI_IOC_MAGIC, 1);
+    enum BITRATE = 8_000_000;
+    enum SPI_IOC_WR_MAX_SPEED_HZ = _IOW!(uint)(SPI_IOC_MAGIC, 4);
+
+    import core.sys.posix.sys.ioctl;
+    import std.stdio;
+
+    std.stdio.File file;
+    IocTransfer[3] transfer = [
+        {speedInHz:BITRATE,bitsPerWord:8,},
+        {speedInHz:BITRATE,bitsPerWord:8,},
+        {speedInHz:BITRATE,bitsPerWord:8,},
+    ];
+
+    this()
+    {
+        file.open("/dev/spidev0.0", "wb");
+
+        ubyte mode = SPI_MODE_0 | SPI_NO_CS;
+        int res = ioctl(file.fileno, SPI_IOC_WR_MODE, &mode);
+        if (res != 0)
+        {
+            throw new Exception("Cannot do ioctl to set spi write mode");
+        }
+
+        // TODO can be removed?
+        res = ioctl(file.fileno, SPI_IOC_WR_MAX_SPEED_HZ, BITRATE);
+    }
+
+    ~this()
+    {
+        file.close;
+    }
+
+    void write(ubyte[] data)
+    {
+        int nrOfPixels = data.length / 4;
+
+        // TODO can be removed?
+        transfer[0].speedInHz = BITRATE;
+        transfer[1].speedInHz = BITRATE;
+        transfer[2].speedInHz = BITRATE;
+        //
+
+        transfer[1].txBuffer = cast(ulong)(data.ptr);
+        transfer[1].length = nrOfPixels * 4; // number of total bytes
+        transfer[2].length = (nrOfPixels + 15) / 8 / 2; // half the number of pixels in bits for the endframe
+        int res = ioctl(file.fileno, spi_ioc_message!3(), &transfer);
+    }
+
+    static auto spi_ioc_message(size_t n)()
+    {
+        return _IOW!(char[spi_msgsize(n)])(SPI_IOC_MAGIC, 0);
+    }
+
+    static size_t spi_msgsize(size_t n)
+    {
+        return ((n * (IocTransfer.sizeof)) < (1 << _IOC_SIZEBITS)) ? (n * (IocTransfer.sizeof)) : 0;
+    }
 }
 
 abstract class Strip
@@ -28,6 +105,8 @@ abstract class Strip
     this(uint nrOfLeds)
     {
         this.ledBuffer = new ubyte[nrOfLeds * 4];
+    }
+    ~this() {
     }
 
     Strip set(uint idx, Color p)
@@ -88,31 +167,26 @@ abstract class Strip
     }
 
     abstract Strip refresh();
-    abstract void close();
 }
 
 class SpiStrip : Strip
 {
-    Spi* spi;
+    Spi spi;
     this(uint nrOfLeds)
     {
         super(nrOfLeds);
-        this.spi = createSpi();
+        this.spi = new Spi;
+    }
+
+    ~this()
+    {
+        this.spi = null;
     }
 
     override Strip refresh()
     {
-        int res = writeSpi(spi, ledBuffer.ptr, cast(uint) ledBuffer.length / 4);
-        if (res != 0)
-        {
-            throw new Exception("write to spi failed: %d".format(res));
-        }
+        spi.write(ledBuffer);
         return this;
-    }
-
-    override void close()
-    {
-        destroySpi(spi);
     }
 }
 /+
@@ -135,16 +209,13 @@ class TcpStrip : Strip
         info(__MODULE__, ":", __PRETTY_FUNCTION__, ":", __LINE__,
                 " connected to ", host, " with ", nrOfLeds, " leds");
     }
-
+    ~this() {
+        stream.close();
+    }
     override Strip refresh()
     {
         stream.write(ledBuffer);
         return this;
-    }
-
-    override void close()
-    {
-        stream.close();
     }
 }
 +/
@@ -156,15 +227,14 @@ class DummyStrip : Strip
         super(nrOfLeds);
     }
 
+    ~this() {
+        info("done");
+    }
+
     override public Strip refresh()
     {
         //        info("dotstart†refresh");
         return this;
-    }
-
-    override public void close()
-    {
-        info("close");
     }
 }
 

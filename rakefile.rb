@@ -122,12 +122,12 @@ task :build_for_raspi do
 end
 
 desc "build for raspi"
-task :build_for_raspi_with_docker do
+task :build_for_raspi_with_docker, [:args] do |t, args|
   out = "out/main/raspi"
   uid = `id -u`.strip
   sh "mkdir -p #{out}"
   sh "docker run -u#{uid}:#{uid} --rm --interactive --tty --mount type=bind,src=#{Dir.pwd},dst=/ws --entrypoint=/usr/bin/bash cross-ldc:0.0.1 -c 'arm-linux-gnueabihf-gcc -c -DREAL_SPI=1 -mhard-float source/c/libdotstar.c -o #{out}/libdotstar.o && arm-linux-gnueabihf-ar rcs #{out}/libdotstar.a #{out}/libdotstar.o'"
-  sh "docker run -u#{uid}:#{uid} --rm --interactive --tty --mount type=bind,src=#{Dir.pwd},dst=/ws cross-ldc:0.0.1"
+  sh "docker run -u#{uid}:#{uid} --rm --interactive --tty --mount type=bind,src=#{Dir.pwd},dst=/ws cross-ldc:0.0.1 #{args[:args]}"
 end
 
 desc "Build cross ldc docker image"
