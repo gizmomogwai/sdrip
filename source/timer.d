@@ -67,12 +67,7 @@ class Timer : Thread
 
     private void run()
     {
-        scope (exit)
-        {
-            info("%s finished".format(name));
-        }
         Thread.getThis.name = name;
-
         while (!finished)
         {
             tasks.remove.run();

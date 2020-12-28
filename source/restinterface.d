@@ -32,9 +32,10 @@ class RestInterface : Api
     {
         import std.stdio;
         import std.conv;
+
         writeln(renderer.to!string);
         // TODO remove debug info
-        
+
         internalActivate(renderer);
         return theRenderer.sendReceive!GetState;
     }

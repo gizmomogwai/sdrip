@@ -3,54 +3,46 @@ description "Dotstar for dlang."
 authors "Christian Koestlin"
 copyright "Copyright (c) 2018, Christian Koestlin"
 license "MIT"
-dependency "dyaml" version="~>0.8.3"
+dependency "vibe-mqtt" version="~>0.3.1"
+dependency "colored" version="~>0.0.22"
 dependency "vibe-d" version="~>0.9.2"
-dependency "mir-algorithm" version="~>3.10.3"
-#dependency "undead" version="~>1.1.1"
-
 dependency "packageversion" version="~>0.0.15"
+dependency "dyaml" version="~>0.8.3"
+dependency "optional" version="~>1.1.0"
+dependency "mir-algorithm" version="~>3.10.3"
+targetType "executable"
+mainSourceFile "source/app.d"
 subConfiguration "packageversion" "library"
-
-preGenerateCommands "packageversion --packageName=sdrip || dub run packageversion -- --packageName=sdrip"
 sourceFiles "out/generated/packageversion/sdrip/packageversion.d"
 sourcePaths "source" "out/generated/packageversion"
 importPaths "source" "out/generated/packageversion"
-
-libs "dotstar"
-mainSourceFile "source/app.d"
-targetType "executable"
-
-configuration "application-osx" {
-  platforms "osx"
-  targetPath "out/main/osx"
-  lflags "-Lout/main/osx"
+preGenerateCommands "packageversion --packageName=sdrip || dub run packageversion -- --packageName=sdrip"
+configuration "application" {
+	platforms "osx" "linux"
+	targetType "executable"
+	targetPath "out/main/posix"
 }
-
 configuration "application-raspi" {
-  platforms "arm"
-  targetPath "out/main/raspi"
-  lflags "-Lout/main/raspi"
-  versions "VibeNoSSL"
-  versions "VibeNoMongo"
+	platforms "arm"
+	targetType "executable"
+	targetPath "out/main/raspi"
+	versions "VibeNoSSL" "VibeNoMongo"
 }
-
 configuration "unittest" {
-  targetName "unittest"
-  targetPath "out/test"
-
-  dependency "unit-threaded" version="~>0.7.38"
-  preBuildCommands "dub run unit-threaded -c gen_ut_main -- -f out/generated/unit-threaded/testsuite.d"
-  mainSourceFile "out/generated/unit-threaded/testsuite.d"
-  excludedSourceFiles "source/app.d"
-  lflags "-Lout/main/osx"
+	dependency "unit-threaded" version="~>0.7.38"
+	targetType "executable"
+	targetPath "out/test"
+	targetName "unittest"
+	mainSourceFile "out/generated/unit-threaded/testsuite.d"
+	excludedSourceFiles "source/app.d"
+	preBuildCommands "dub run unit-threaded -c gen_ut_main -- -f out/generated/unit-threaded/testsuite.d"
 }
-
 configuration "ut" {
-  targetName "ut"
-
-  versions "unitThreadedLight"
-  dependency "unit-threaded" version="~>0.7.38"
-  mainSourceFile "out/generated/unit-threaded/testsuite.d"
-  excludedSourceFiles "source/app.d"
-  lflags "-Lout/main/osx"
+	dependency "unit-threaded" version="~>0.7.38"
+	targetType "executable"
+	targetName "ut"
+	mainSourceFile "out/generated/unit-threaded/testsuite.d"
+	lflags "-Lout/main/osx"
+	excludedSourceFiles "source/app.d"
+	versions "unitThreadedLight"
 }

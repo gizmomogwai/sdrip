@@ -95,12 +95,15 @@ class MinMaxWithDefault(T) : WithDefault!(T)
 {
     T min;
     T max;
-    this(string name, string type, T value, T defaultValue, T min, T max) {
+    this(string name, string type, T value, T defaultValue, T min, T max)
+    {
         super(name, type, value, defaultValue);
         this.min = min;
         this.max = max;
     }
-    override Json toJson(string prefix) {
+
+    override Json toJson(string prefix)
+    {
         // dfmt off
         return Json([
                         "name" : Json(path(prefix, name)),
@@ -149,7 +152,7 @@ class Renderer
     Json toJson(string prefix)
     {
         auto path = path(prefix, name);
-        auto res = Json(["name" : Json(path)]);
+        auto res = Json(["name": Json(path)]);
         if (!properties.empty)
         {
             res["properties"] = Json(properties.map!(p => p.toJson(path)).array);
@@ -252,7 +255,8 @@ class ColorRenderer : Renderer
 
 class RainbowRenderer : Renderer
 {
-    MinMaxWithDefault!float velocity = minMaxWithDefault("velocity", "float", 0.2f, 0.2f, -3.0f, 3.0f);
+    MinMaxWithDefault!float velocity = minMaxWithDefault("velocity", "float",
+            0.2f, 0.2f, -3.0f, 3.0f);
     float phase = 0.0f;
     this(string name)
     {
@@ -326,11 +330,6 @@ auto toPath(string key)
 
 void renderloop(immutable(Prefs) settings)
 {
-    scope (exit)
-    {
-        info("renderLoop finished");
-    }
-
     try
     {
         auto strip = createStrip(settings);
@@ -343,6 +342,7 @@ void renderloop(immutable(Prefs) settings)
         // dfmt off
         Renderer[] renderers = [
             new ColorRenderer("red", "#ff0000"),
+            new ColorRenderer("read", "#ff0000"),
             new ColorRenderer("green", "#00ff00"),
             new ColorRenderer("blue", "#0000ff"),
             new RainbowRenderer("rainbow"),
@@ -350,6 +350,11 @@ void renderloop(immutable(Prefs) settings)
         // dfmt on
         Renderer currentRenderer = new DummyRenderer;
         auto timer = new Timer("rendering").start;
+        scope (exit)
+        {
+            timer.shutdown();
+        }
+
         int renderId = 0;
         while (!finished)
         {
@@ -415,17 +420,16 @@ void renderloop(immutable(Prefs) settings)
                     auto d = currentRenderer.renderTo(strip);
                     scheduleNextRendering(timer, thisTid, d, msPerFrame, render);
                 },
-                (Tid sender, Shutdown s)
+                (OwnerTerminated ot)
                 {
                     finished = true;
                 },
                 (Variant v) {
                     error("unknown message ", v);
-                }
+                },
             );
             // dfmt on
         }
-        timer.shutdown();
     }
     catch (Exception e)
     {

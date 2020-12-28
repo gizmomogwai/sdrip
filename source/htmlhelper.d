@@ -9,8 +9,8 @@ string renderBoolField(S, T)(S name, T value)
     string nameString = name.to!string;
     bool valueBool = value.to!bool;
     return `<input type="checkbox" name="%s" %s data-toggle="toggle" onChange="this.form.submit()" />`.format(
-            nameString, valueBool ? "checked"
-            : "") ~ `<input type="hidden" name="%s" value="off" />`.format(nameString);
+            nameString, valueBool
+            ? "checked" : "") ~ `<input type="hidden" name="%s" value="off" />`.format(nameString);
 }
 
 string htmlForBoolProperty(Json p)
@@ -38,7 +38,8 @@ string htmlForFloatProperty(Json p)
     string minValue = p["min"].to!string;
     string maxValue = p["max"].to!string;
     */
-    return `%1$s <input type="text" name="%1$s" value="%2$s" defaultValue="%3$s" />`.format(name, value, defaultValue);
+    return `%1$s <input type="text" name="%1$s" value="%2$s" defaultValue="%3$s" />`.format(name,
+            value, defaultValue);
 }
 
 string renderProperty(Json p)

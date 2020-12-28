@@ -37,7 +37,7 @@ RUN \
   && rm -rf /var/lib/apt/lists/* \
   && curl -fsS https://dlang.org/install.sh | bash -s -- install --path /dlang ldc \
   && chmod --recursive 777 /dlang \
-  && apt remove curl gnupg xz-utils --yes \
+  && apt remove gnupg xz-utils --yes \
   && apt autoremove --yes
 
 ENV PATH=/dlang/ldc-1.24.0/bin:/usr/local/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf/bin:$PATH

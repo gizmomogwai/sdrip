@@ -50,5 +50,5 @@ auto load(T...)(T files)
             res = res.add(key, value);
         }
     }
-    return res;
+    return cast(immutable) res;
 }
