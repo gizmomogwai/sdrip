@@ -130,19 +130,21 @@ static minMaxWithDefault(T)(string name, string type, T v, T defaultValue, T min
 class Renderer
 {
     string name;
-    WithDefault!bool active = withDefault("active", "boolean", true);
+    WithDefault!bool active;
+    MinMaxWithDefault!int alpha;
     Property[] properties;
     Renderer[] childs;
     this(string name, Property[] properties)
     {
-        this.name = name;
-        this.properties = properties ~ active;
+        this(name, properties, []);
     }
 
     this(string name, Property[] properties, Renderer[] childs)
     {
         this.name = name;
-        this.properties = properties ~ active;
+        this.active = withDefault("active", "boolean", true);
+        this.alpha = minMaxWithDefault("alpha", "int", 16, 255, 0, 255);
+        this.properties = properties ~ active ~ alpha;
         this.childs = childs;
     }
 
@@ -156,13 +158,25 @@ class Renderer
         active.value = !active.value;
     }
 
+    private Json[] collectProperties(string prefix) {
+        auto path= path(prefix, name);
+        Json[] res;
+        res ~= properties.map!(p => p.toJson(path)).array;
+        foreach (child; childs) {
+            res ~= child.collectProperties(path);
+        }
+        return res;
+    }
+
     Json toJson(string prefix)
     {
         auto path = path(prefix, name);
         auto res = Json(["name": Json(path)]);
-        if (!properties.empty)
+
+        auto allProperties = collectProperties(prefix);
+        if (!allProperties.empty)
         {
-            res["properties"] = Json(properties.map!(p => p.toJson(path)).array);
+            res["properties"] = Json(allProperties);
         }
         return res;
     }
@@ -191,7 +205,6 @@ class Renderer
 
     private void apply(const(string)[] path, string value)
     {
-        info("apply %s -> %s".format(path, value));
         if (!path)
         {
             return;
@@ -199,6 +212,7 @@ class Renderer
 
         if (path[0] == name)
         {
+            info("apply(", path, ", ", value);
             path = path[1 .. $];
             if (path.length == 1)
             {
@@ -262,11 +276,11 @@ class ColorRenderer : Renderer
 
 class RainbowRenderer : Renderer
 {
-    MinMaxWithDefault!float velocity = minMaxWithDefault("velocity", "float",
-            0.2f, 0.2f, -3.0f, 3.0f);
+    MinMaxWithDefault!float velocity;
     float phase = 0.0f;
     this(string name)
     {
+        this.velocity = minMaxWithDefault("velocity", "float", 0.2f, 0.2f, -3.0f, 3.0f);
         super(name, [velocity]);
     }
 
@@ -343,7 +357,7 @@ class SumRenderer : Renderer
         auto colors = childs.map!(c => c.internalRender(res)).array;
         foreach (idx, ref color; res)
         {
-            Color c;
+            auto c = Color(cast(ubyte)(alpha.value), 0, 0, 0);
             foreach (childColors; colors)
             {
                 c.add(childColors[idx]);

@@ -32,7 +32,8 @@ abstract class Strip
     Strip set(uint idx, ubyte a, ubyte r, ubyte g, ubyte b)
     {
         auto i = idx * 4;
-        ledBuffer[i] = a;
+        import std.stdio;
+        ledBuffer[i] = cast(ubyte)(0b11100000 | (a >> 3));
         ledBuffer[i + 1] = b;
         ledBuffer[i + 2] = g;
         ledBuffer[i + 3] = r;
@@ -63,19 +64,19 @@ abstract class Strip
     {
         for (int i = 0; i < size(); ++i)
         {
-            set(i, Color(255, 0, 0));
+            set(i, Color(255, 255, 0, 0));
         }
         refresh();
         Thread.sleep(dur!("seconds")(1));
         for (int i = 0; i < size(); ++i)
         {
-            set(i, Color(0, 255, 0));
+            set(i, Color(255, 0, 255, 0));
         }
         refresh();
         Thread.sleep(dur!("seconds")(1));
         for (int i = 0; i < size(); ++i)
         {
-            set(i, Color(0, 0, 255));
+            set(i, Color(255, 0, 0, 255));
         }
         refresh();
         Thread.sleep(dur!("seconds")(1));
@@ -87,12 +88,12 @@ abstract class Strip
 version (linux)
 {
     /+
-+ References:
-+ - https://www.kernel.org/doc/Documentation/spi/spidev
-+ - https://cdn-shop.adafruit.com/datasheets/APA102.pdf
-+ - https://github.com/adafruit/Adafruit_DotStar_Pi/blob/master/dotstar.c
-+ - https://cpldcpu.wordpress.com/2014/11/30/understanding-the-apa102-superled/
-+/
+     + References:
+     + - https://www.kernel.org/doc/Documentation/spi/spidev
+     + - https://cdn-shop.adafruit.com/datasheets/APA102.pdf
+     + - https://github.com/adafruit/Adafruit_DotStar_Pi/blob/master/dotstar.c
+     + - https://cpldcpu.wordpress.com/2014/11/30/understanding-the-apa102-superled/
+     +/
     class Spi
     {
         struct IocTransfer
@@ -268,28 +269,46 @@ class TerminalStrip : Strip
 
 struct Color
 {
-    ubyte a = cast(ubyte) 0xff;
+    ubyte a;
     ubyte r;
     ubyte g;
     ubyte b;
+
     this(string v) @safe
     {
-        if (v.length != 7)
+        switch (v.length) {
+        case 9:
         {
-            throw new Exception("illegal color string format: '%s' expected #rrggbb".format(v));
+            if (v[0 .. 1] != "#")
+            {
+                throw new Exception("illegal color string format: '%s' expected #aarrggbb".format(v));
+            }
+            a = v[1 .. 3].to!ubyte(16);
+            r = v[3 .. 5].to!ubyte(16);
+            g = v[5 .. 7].to!ubyte(16);
+            b = v[7 .. 9].to!ubyte(16);
+            break;
         }
-        if (v[0 .. 1] != "#")
+        case 7:
         {
-            throw new Exception("illegal color string format: '%s' expected #rrggbb".format(v));
+            if (v[0 .. 1] != "#")
+            {
+                throw new Exception("illegal color string format: '%s' expected #rrggbb".format(v));
+            }
+            a = 0xff;
+            r = v[1 .. 3].to!ubyte(16);
+            g = v[3 .. 5].to!ubyte(16);
+            b = v[5 .. 7].to!ubyte(16);
+            break;
         }
-        a = cast(ubyte) 0xff;
-        r = v[1 .. 3].to!ubyte(16);
-        g = v[3 .. 5].to!ubyte(16);
-        b = v[5 .. 7].to!ubyte(16);
+        default:
+            throw new Exception("illegal color string format: '%s' expected #aarrggbb or #rrggbb".format(v));
+        }
     }
 
-    this(ubyte r, ubyte g, ubyte b) @safe
+    this(ubyte a, ubyte r, ubyte g, ubyte b) @safe
     {
+        this.a = a;
         this.r = r;
         this.g = g;
         this.b = b;
@@ -345,12 +364,13 @@ struct Color
             c_.g = 0;
             c_.b = x;
         }
-        return Color(((c_.r + m) * 255).lround.to!ubyte, ((c_.g + m) * 255)
+        return Color(255, ((c_.r + m) * 255).lround.to!ubyte, ((c_.g + m) * 255)
                 .lround.to!ubyte, ((c_.b + m) * 255).lround.to!ubyte);
     }
 
-    void set(ubyte r, ubyte g, ubyte b)
+    void set(ubyte a, ubyte r, ubyte g, ubyte b)
     {
+        this.a = a;
         this.r = r;
         this.g = g;
         this.b = b;
@@ -358,7 +378,7 @@ struct Color
 
     string toString() const @safe
     {
-        return "#%02x%02x%02x".format(r, g, b);
+        return "#%02x%02x%02x".format(r, g, b); // used for html -> not alpha possible
     }
 
     void add(Color p)
@@ -370,7 +390,7 @@ struct Color
 
     auto factor(float f)
     {
-        return Color((this.r * f).to!ubyte, (this.g * f).to!ubyte, (this.b * f).to!ubyte);
+        return Color(this.a, (this.r * f).to!ubyte, (this.g * f).to!ubyte, (this.b * f).to!ubyte);
     }
 }
 

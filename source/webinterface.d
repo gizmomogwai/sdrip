@@ -66,7 +66,6 @@ class WebInterface
     {
         import packageversion;
         import std.algorithm;
-        import std.stdio;
 
         auto packages = packageversion.getPackages.sort!("a.name < b. name");
         render!("status.dt", packages);

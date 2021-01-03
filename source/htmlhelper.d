@@ -42,6 +42,19 @@ string htmlForFloatProperty(Json p)
             value, defaultValue);
 }
 
+string htmlForIntProperty(Json p)
+{
+    string name = p["name"].to!string;
+    string value = p["value"].to!string;
+    string defaultValue = p["defaultValue"].to!string;
+    /*
+    string minValue = p["min"].to!string;
+    string maxValue = p["max"].to!string;
+    */
+    return `%1$s <input type="text" name="%1$s" value="%2$s" defaultValue="%3$s" />`.format(name,
+            value, defaultValue);
+}
+
 string renderProperty(Json p)
 {
     switch (p["type"].to!string)
@@ -52,6 +65,8 @@ string renderProperty(Json p)
         return htmlForColorProperty(p);
     case "float":
         return htmlForFloatProperty(p);
+    case "int":
+        return htmlForIntProperty(p);
     default:
         return "nyi";
     }
