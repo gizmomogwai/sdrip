@@ -54,5 +54,6 @@ COPY ldc.conf /ldc.conf
 RUN \
   cat /ldc.conf >> /dlang/ldc-1.24.0/etc/ldc2.conf
 
+env HOME=/tmp
 WORKDIR /ws
 ENTRYPOINT ["dub", "--cache=local", "build", "--arch=armv6-linux-gnueabihf"]
