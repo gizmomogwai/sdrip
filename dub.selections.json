@@ -26,7 +26,7 @@
 		"taggedalgebraic": "0.11.18",
 		"tinyendian": "0.2.0",
 		"undead": "1.1.1",
-		"unit-threaded": "0.7.55",
+		"unit-threaded": "1.0.11",
 		"vibe-core": "1.11.3",
 		"vibe-d": "0.9.2",
 		"vibe-mqtt": "0.3.1"

@@ -21,6 +21,7 @@ configuration "application" {
 	platforms "osx" "linux"
 	targetType "executable"
 	targetPath "out/main/posix"
+	versions "VibeNoSSL" "VibeNoMongo"
 }
 configuration "application-raspi" {
 	platforms "arm"
@@ -29,7 +30,7 @@ configuration "application-raspi" {
 	versions "VibeNoSSL" "VibeNoMongo"
 }
 configuration "unittest" {
-	dependency "unit-threaded" version="~>0.7.38"
+	dependency "unit-threaded" version="~>1.0.0"
 	targetType "executable"
 	targetPath "out/test"
 	targetName "unittest"
@@ -38,7 +39,7 @@ configuration "unittest" {
 	preBuildCommands "dub run unit-threaded -c gen_ut_main -- -f out/generated/unit-threaded/testsuite.d"
 }
 configuration "ut" {
-	dependency "unit-threaded" version="~>0.7.38"
+	dependency "unit-threaded" version="~>1.0.0"
 	targetType "executable"
 	targetName "ut"
 	mainSourceFile "out/generated/unit-threaded/testsuite.d"

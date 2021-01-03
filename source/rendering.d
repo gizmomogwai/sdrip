@@ -139,6 +139,13 @@ class Renderer
         this.properties = properties ~ active;
     }
 
+    this(string name, Property[] properties, Renderer[] childs)
+    {
+        this.name = name;
+        this.properties = properties ~ active;
+        this.childs = childs;
+    }
+
     bool isActive()
     {
         return active.value;
@@ -293,6 +300,60 @@ class RainbowRenderer : Renderer
     }
 }
 
+class SinRenderer : Renderer
+{
+    Color color;
+    float phase;
+    MinMaxWithDefault!float frequency;
+    MinMaxWithDefault!float velocity;
+
+    this(string name, string color, float phase, float frequency, float velocity)
+    {
+        this.frequency = minMaxWithDefault("frequency", "float", frequency,
+                frequency, 1.0f, 10.0f);
+        this.velocity = minMaxWithDefault("velocity", "float", velocity, velocity, -3.0f, 3.0f);
+        super(name, [this.frequency, this.velocity]);
+        this.color = Color(color);
+        this.phase = phase;
+    }
+
+    override Color[] internalRender(Color[] res)
+    {
+        import std.range;
+        import std.math;
+
+        const size = res.length;
+
+        phase += velocity.value;
+        return iota(0, size).map!(
+                x => color.factor(
+                (sin((x.to!float + phase) / size * 2 * PI * frequency.value) + 1) / 2.0f)).array;
+    }
+}
+
+class SumRenderer : Renderer
+{
+    this(string name, Renderer[] childs)
+    {
+        super(name, [], childs);
+    }
+
+    override Color[] internalRender(Color[] res)
+    {
+        auto colors = childs.map!(c => c.internalRender(res)).array;
+        foreach (idx, ref color; res)
+        {
+            Color c;
+            foreach (childColors; colors)
+            {
+                c.add(childColors[idx]);
+            }
+            color = c;
+        }
+        return res;
+    }
+}
+
 class DummyRenderer : Renderer
 {
     this()
@@ -346,6 +407,10 @@ void renderloop(immutable(Prefs) settings)
             new ColorRenderer("green", "#00ff00"),
             new ColorRenderer("blue", "#0000ff"),
             new RainbowRenderer("rainbow"),
+            new SumRenderer("fire", [
+                                new SinRenderer("red", "#ff0000", 0, 4, 2),
+                                new SinRenderer("yellow", "#ffff00", 0, 2, -1),
+                            ]),
         ];
         // dfmt on
         Renderer currentRenderer = new DummyRenderer;
