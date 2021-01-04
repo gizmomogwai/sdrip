@@ -4,3 +4,6 @@
 
 * TODOs
 ** TODO add min max to float value
+** DONE use bootstrap and so on from local server
+   CLOSED: [2021-01-04 Mon 16:53]
+   - CLOSING NOTE [2021-01-04 Mon 16:53]
