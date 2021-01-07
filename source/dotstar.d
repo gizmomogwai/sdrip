@@ -260,9 +260,16 @@ class TerminalStrip : Strip
 
         foreach (pixel; ledBuffer.chunks(4))
         {
+            auto h = cast(ubyte)( (pixel[0] & 0b00011111) << 3 ) ;
+            write(" ".onRgb(h, h, h));
+        }
+        writeln;
+        foreach (pixel; ledBuffer.chunks(4))
+        {
             write(" ".onRgb(pixel[3], pixel[2], pixel[1]));
         }
-        write("\r");
+        writeln;
+        write("\033[2A");
         return this;
     }
 }

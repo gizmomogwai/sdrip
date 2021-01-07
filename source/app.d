@@ -54,7 +54,7 @@ auto setupMqtt(immutable(Prefs) prefs, Tid renderer)
 
     auto mqttSettings = Settings();
     mqttSettings.clientId = "sdrip";
-    mqttSettings.reconnect = 1;
+    mqttSettings.reconnect = 1.sec;
     mqttSettings.host = "mqtt.beebotte.com";
     mqttSettings.userName = "token:token_2M68jYuF3by46hgB";
     mqttSettings.onPublish = (scope MqttClient client, in Publish packet) {
