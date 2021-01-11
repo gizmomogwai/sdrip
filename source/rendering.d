@@ -131,7 +131,7 @@ class Renderer
 {
     string name;
     WithDefault!bool active;
-    MinMaxWithDefault!int alpha;
+    MinMaxWithDefault!ubyte alpha;
     Property[] properties;
     Renderer[] childs;
     this(string name, Property[] properties)
@@ -143,7 +143,8 @@ class Renderer
     {
         this.name = name;
         this.active = withDefault("active", "boolean", true);
-        this.alpha = minMaxWithDefault("alpha", "int", 16, 255, 0, 255);
+        this.alpha = minMaxWithDefault("alpha", "ubyte", cast(ubyte) 16,
+                cast(ubyte) 255, cast(ubyte) 0, cast(ubyte) 255);
         this.properties = properties ~ active ~ alpha;
         this.childs = childs;
     }
@@ -310,7 +311,7 @@ class RainbowRenderer : Renderer
         float s = size.to!float;
         // dfmt off
         return iota(0, size)
-            .map!(x => Color.hsv(hue(phase + (x.to!float * 360.0f / s))))
+            .map!(x => Color.hsv(hue(phase + (x.to!float * 360.0f / s))).setAlpha(alpha.value))
             .array;
         // dfmt on
     }

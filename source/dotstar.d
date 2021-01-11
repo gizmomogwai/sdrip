@@ -409,6 +409,12 @@ struct Color
     {
         return Color(this.a, (this.r * f).to!ubyte, (this.g * f).to!ubyte, (this.b * f).to!ubyte);
     }
+
+    auto setAlpha(ubyte alpha)
+    {
+        this.a = alpha;
+        return this;
+    }
 }
 
 @("hsv2rgb") unittest
