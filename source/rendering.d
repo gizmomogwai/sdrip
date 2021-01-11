@@ -158,11 +158,13 @@ class Renderer
         active.value = !active.value;
     }
 
-    private Json[] collectProperties(string prefix) {
-        auto path= path(prefix, name);
+    private Json[] collectProperties(string prefix)
+    {
+        auto path = path(prefix, name);
         Json[] res;
         res ~= properties.map!(p => p.toJson(path)).array;
-        foreach (child; childs) {
+        foreach (child; childs)
+        {
             res ~= child.collectProperties(path);
         }
         return res;

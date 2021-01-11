@@ -33,6 +33,7 @@ abstract class Strip
     {
         auto i = idx * 4;
         import std.stdio;
+
         ledBuffer[i] = cast(ubyte)(0b11100000 | (a >> 3));
         ledBuffer[i + 1] = b;
         ledBuffer[i + 2] = g;
@@ -258,9 +259,14 @@ class TerminalStrip : Strip
         import colored;
         import std;
 
+        write("\x1b[?25l"); // switch off cursor
+        scope (exit)
+        {
+            write("\x1b[?25h"); // switch on cursor
+        }
         foreach (pixel; ledBuffer.chunks(4))
         {
-            auto h = cast(ubyte)( (pixel[0] & 0b00011111) << 3 ) ;
+            auto h = cast(ubyte)((pixel[0] & 0b00011111) << 3);
             write(" ".onRgb(h, h, h));
         }
         writeln;
@@ -283,33 +289,37 @@ struct Color
 
     this(string v) @safe
     {
-        switch (v.length) {
+        switch (v.length)
+        {
         case 9:
-        {
-            if (v[0 .. 1] != "#")
             {
-                throw new Exception("illegal color string format: '%s' expected #aarrggbb".format(v));
+                if (v[0 .. 1] != "#")
+                {
+                    throw new Exception(
+                            "illegal color string format: '%s' expected #aarrggbb".format(v));
+                }
+                a = v[1 .. 3].to!ubyte(16);
+                r = v[3 .. 5].to!ubyte(16);
+                g = v[5 .. 7].to!ubyte(16);
+                b = v[7 .. 9].to!ubyte(16);
+                break;
             }
-            a = v[1 .. 3].to!ubyte(16);
-            r = v[3 .. 5].to!ubyte(16);
-            g = v[5 .. 7].to!ubyte(16);
-            b = v[7 .. 9].to!ubyte(16);
-            break;
-        }
         case 7:
-        {
-            if (v[0 .. 1] != "#")
             {
-                throw new Exception("illegal color string format: '%s' expected #rrggbb".format(v));
+                if (v[0 .. 1] != "#")
+                {
+                    throw new Exception(
+                            "illegal color string format: '%s' expected #rrggbb".format(v));
+                }
+                a = 0xff;
+                r = v[1 .. 3].to!ubyte(16);
+                g = v[3 .. 5].to!ubyte(16);
+                b = v[5 .. 7].to!ubyte(16);
+                break;
             }
-            a = 0xff;
-            r = v[1 .. 3].to!ubyte(16);
-            g = v[3 .. 5].to!ubyte(16);
-            b = v[5 .. 7].to!ubyte(16);
-            break;
-        }
         default:
-            throw new Exception("illegal color string format: '%s' expected #aarrggbb or #rrggbb".format(v));
+            throw new Exception(
+                    "illegal color string format: '%s' expected #aarrggbb or #rrggbb".format(v));
         }
     }
 
