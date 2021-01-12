@@ -68,7 +68,8 @@ string htmlForUByteProperty(Json p)
 
 string renderProperty(Json p)
 {
-    switch (p["type"].to!string)
+    auto t = p["type"].to!string;
+    switch (t)
     {
     case "boolean":
         return htmlForBoolProperty(p);
@@ -81,7 +82,6 @@ string renderProperty(Json p)
     case "ubyte":
         return htmlForUByteProperty(p);
     default:
-        return "nyi";
+        throw new Exception(t ~ " nyi");
     }
-
 }
