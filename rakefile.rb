@@ -156,6 +156,10 @@ hosts = [
           puts capture "ls -l /home/osmc"
           upload!(file, "/home/osmc/sdrip/")
         end
+        execute("mkdir", "-p", "/home/osmc/sdrip/public")
+        Dir.glob("public/*").each do |file|
+          upload!(file, "/home/osmc/sdrip/public/#{File.basename(file)}")
+        end
         upload!("out/main/raspi/sdrip", "/home/osmc/sdrip/")
         execute("sudo systemctl start sdrip")
       end
