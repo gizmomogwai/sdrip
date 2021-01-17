@@ -43,8 +43,8 @@ auto httpSettings(T)(T prefs)
 auto setupMqtt(immutable(Prefs) prefs, Tid renderer)
 {
     import mqttd;
-    import std.algorithm;
     import vibe.data.json;
+    import core.time;
 
     auto topic = prefs.get("topic");
     if (topic == "")
@@ -54,7 +54,7 @@ auto setupMqtt(immutable(Prefs) prefs, Tid renderer)
 
     auto mqttSettings = Settings();
     mqttSettings.clientId = "sdrip";
-    mqttSettings.reconnect = 1.sec;
+    mqttSettings.reconnect = 1.seconds;
     mqttSettings.host = "mqtt.beebotte.com";
     mqttSettings.userName = "token:token_2M68jYuF3by46hgB";
     mqttSettings.onPublish = (scope MqttClient client, in Publish packet) {
