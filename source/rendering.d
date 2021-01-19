@@ -143,7 +143,7 @@ class Renderer
     {
         this.name = name;
         this.active = withDefault("active", "boolean", true);
-        this.alpha = minMaxWithDefault("alpha", "ubyte", cast(ubyte) 16,
+        this.alpha = minMaxWithDefault("alpha", "ubyte", cast(ubyte) 255,
                 cast(ubyte) 255, cast(ubyte) 0, cast(ubyte) 255);
         this.properties = properties ~ active ~ alpha;
         this.childs = childs;
