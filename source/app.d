@@ -65,7 +65,7 @@ auto setupMqtt(immutable(Prefs) prefs, Tid renderer)
     mqttSettings.host = "mqtt.beebotte.com";
     mqttSettings.userName = user;
     mqttSettings.onPublish = (scope MqttClient client, in Publish packet) {
-        writeln(packet.topic);
+        info(packet.topic);
         if (packet.topic == topic)
         {
             auto json = parseJsonString((cast(const char[]) packet.payload).idup);
