@@ -1,0 +1,8 @@
+---
+location: seehaus-piano
+bind: 0.0.0.0:4567
+strip: spi
+nr_of_leds: 120
+fps: 30
+mqtt.topic: seehaus/command
+mqtt.user: token_2M68jYuF3by46hgB

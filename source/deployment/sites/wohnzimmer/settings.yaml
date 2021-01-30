@@ -1,5 +1,8 @@
 ---
 location: wohnzimmer
 bind: 0.0.0.0:4567
+strip: spi
 nr_of_leds: 120
 fps: 30
+mqtt.topic: munich/command
+mqtt.user: token_3kz96QEB4jaZ6nxY

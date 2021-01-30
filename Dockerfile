@@ -26,7 +26,7 @@ RUN \
   cat /ldc.conf >> /dlang/ldc-1.24.0/etc/ldc2.conf
 
 WORKDIR /ws
-ENTRYPOINT ["dub", "--cache=local", "build", "--arch=armv6-linux-gnueabihf"]
+ENTRYPOINT ["dub", "build", "--arch=armv6-linux-gnueabihf", "--cache=local"]
 
 FROM ubuntu:20.04
 

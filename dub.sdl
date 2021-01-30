@@ -16,7 +16,7 @@ subConfiguration "packageversion" "library"
 sourceFiles "out/generated/packageversion/sdrip/packageversion.d"
 sourcePaths "source" "out/generated/packageversion"
 importPaths "source" "out/generated/packageversion"
-preGenerateCommands "packageversion --packageName=sdrip || dub run packageversion -- --packageName=sdrip"
+preGenerateCommands "packageversion --packageName=sdrip || dub run --cache=local packageversion -- --packageName=sdrip"
 configuration "application" {
 	platforms "osx" "linux"
 	targetType "executable"

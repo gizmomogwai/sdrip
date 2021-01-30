@@ -8,6 +8,7 @@ import std.experimental.logger;
 import std.process;
 import std.stdio;
 import std.string;
+import std.range;
 import optional;
 
 auto routes(immutable(Prefs) prefs, Tid renderer)
@@ -46,8 +47,14 @@ auto setupMqtt(immutable(Prefs) prefs, Tid renderer)
     import vibe.data.json;
     import core.time;
 
-    auto topic = prefs.get("topic");
+    auto topic = prefs.get("mqtt.topic");
     if (topic == "")
+    {
+        return oc(no!MqttClient);
+    }
+
+    auto user = prefs.get("mqtt.user");
+    if (user == "")
     {
         return oc(no!MqttClient);
     }
@@ -56,24 +63,24 @@ auto setupMqtt(immutable(Prefs) prefs, Tid renderer)
     mqttSettings.clientId = "sdrip";
     mqttSettings.reconnect = 1.seconds;
     mqttSettings.host = "mqtt.beebotte.com";
-    mqttSettings.userName = "token:token_2M68jYuF3by46hgB";
+    mqttSettings.userName = user;
     mqttSettings.onPublish = (scope MqttClient client, in Publish packet) {
+        writeln(packet.topic);
         if (packet.topic == topic)
         {
             auto json = parseJsonString((cast(const char[]) packet.payload).idup);
-            auto command = json["data"].get!string;
+            auto command = json["data"].get!string.toLower;
             info(packet.topic, ": ", json);
-            if (command.startsWith("piano toggle")
-                    || command.startsWith("piano on") || command.startsWith("piano off"))
+            if (!command.find("toggle").empty
+                    || !command.find("on").empty || !command.find("off").empty)
             {
                 renderer.sendReceive!Toggle;
             }
-            else if (command.startsWith("piano activate"))
+            else if (!command.find("activate").empty)
             {
                 auto parts = command.split(" ");
-                if (parts.length == 4)
                 {
-                    renderer.sendReceive!Activate(parts[3]);
+                    renderer.sendReceive!Activate(parts.retro.front);
                 }
             }
         }

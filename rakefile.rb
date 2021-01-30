@@ -87,26 +87,6 @@ def os
 
   raise "Platform not supported: #{RUBY_PLATFORM}"
 end
-def output_folder
-  File.join('out', 'main', os.to_s)
-end
-
-directory output_folder
-lib = file "#{output_folder}/libdotstar.o" => ['source/c/libdotstar.c', 'source/c/libdotstar.h', output_folder, 'rakefile.rb'] do |t|
-  flags = os == :osx ? "-DSIM_SPI=1" : "-DREAL_SPI=1"
-  flags = os == :raspi ? flags + " -mhard-float " : flags
-  sh "gcc -std=c11 -c #{flags} -o #{t.name} #{t.prerequisites.first}"
-end
-
-f = file "#{output_folder}/libdotstar.a" => ["#{output_folder}/libdotstar.o"] do |t|
-  sh "ar rcs #{t.name} #{t.prerequisites.first}"
-end
-
-task 'out/main/sdrip3' do
-  sh "dub build --compiler=dmd"
-end
-
-task :build => [f, 'out/main/sdrip3']
 
 task :default => [:build, :test]
 
@@ -139,37 +119,57 @@ require "sshkit/dsl"
 include SSHKit::DSL
 
 hosts = [
-  "wohnzimmer",
-  "seehaus-piano",
+  {
+    name: "wohnzimer",
+    stop_command: "sudo systemctl stop sdrip",
+    start_command: "sudo systemctl start sdrip",
+    status_command: "sudo systemctl status sdrip",
+    home: "/home/osmc",
+  },
+  {
+    name: "seehaus-piano",
+    stop_command: "systemctl --user stop sdrip",
+    start_command: "systemctl --user start sdrip",
+    status_command: "systemctl --user status sdrip",
+    home: "/home/pi",
+  },
 ].each do |host|
 
+  name = host[:name]
+  stop_command = host[:stop_command]
+  start_command = host[:start_command]
+  status_command = host[:status_command]
+  home = host[:home]
+
   namespace :deploy do
-    desc "Deploy to #{host}"
-    task host do
-      on [host] do
-        info "Working on #{host}"
-        execute("sudo systemctl stop sdrip")
+    desc "Deploy to #{name}"
+    task name do
+      on [name] do
+        info "Working on #{name}"
+        execute(stop_command)
         execute("rm -rf ~/sdrip")
         execute("mkdir ~/sdrip")
         Dir.glob("source/deployment/sites/#{host}/*").each do |file|
           puts "uploading #{file}"
-          puts capture "ls -l /home/osmc"
-          upload!(file, "/home/osmc/sdrip/")
+          puts capture "ls -l #{home}"
+          upload!(file, "#{home}/sdrip/")
         end
-        execute("mkdir", "-p", "/home/osmc/sdrip/public")
+        execute("mkdir", "-p", "#{home}/sdrip/public")
         Dir.glob("public/*").each do |file|
-          upload!(file, "/home/osmc/sdrip/public/#{File.basename(file)}")
+          upload!(file, "#{home}/sdrip/public/#{File.basename(file)}")
         end
-        upload!("out/main/raspi/sdrip", "/home/osmc/sdrip/")
-        execute("sudo systemctl start sdrip")
+        upload!("out/main/raspi/sdrip", "#{home}/sdrip/")
+        upload!("source/deployment/sites/#{name}/settings.yaml", "#{home}/sdrip")
+        execute(start_command)
       end
     end
   end
+
   namespace :status do
     desc "Status of #{host}"
-    task host do
-      on [host] do
-        puts capture("systemctl status sdrip")
+    task name do
+      on [name] do
+        puts capture(status_command)
       end
     end
   end
