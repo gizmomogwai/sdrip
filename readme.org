@@ -2,6 +2,10 @@
 ** downgrade raspi kernel to sudo something 4.19 with rpi-update e1050e94821a70b2e4c72b318d6c6c968552e9a2
 
 
+* https://beebotte.com/gizmomogwai/seehaus
+* https://beebotte.com/gizmomogwai/munich
+
+
 * TODOs
 ** TODO add min max to float value
 ** DONE use bootstrap and so on from local server
