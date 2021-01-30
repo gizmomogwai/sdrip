@@ -124,6 +124,7 @@ hosts = [
     stop_command: "sudo systemctl stop sdrip",
     start_command: "sudo systemctl start sdrip",
     status_command: "sudo systemctl status sdrip",
+    log_command: "sudo journalctl --unit sdrip",
     home: "/home/osmc",
   },
   {
@@ -131,6 +132,7 @@ hosts = [
     stop_command: "systemctl --user stop sdrip",
     start_command: "systemctl --user start sdrip",
     status_command: "systemctl --user status sdrip",
+    log_command: "journalctl --user-unit sdrip",
     home: "/home/pi",
   },
 ].each do |host|
@@ -139,6 +141,7 @@ hosts = [
   stop_command = host[:stop_command]
   start_command = host[:start_command]
   status_command = host[:status_command]
+  log_command = host[:log_command]
   home = host[:home]
 
   namespace :deploy do
@@ -166,10 +169,19 @@ hosts = [
   end
 
   namespace :status do
-    desc "Status of #{host}"
+    desc "Status of #{name}"
     task name do
       on [name] do
         puts capture(status_command)
+      end
+    end
+  end
+
+  namespace :log do
+    desc "Log of #{name}"
+    task name do
+      on [name] do
+        puts capture(log_command)
       end
     end
   end
