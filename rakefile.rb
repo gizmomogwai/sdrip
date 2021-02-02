@@ -120,7 +120,7 @@ include SSHKit::DSL
 
 hosts = [
   {
-    name: "wohnzimer",
+    name: "wohnzimmer",
     stop_command: "sudo systemctl stop sdrip",
     start_command: "sudo systemctl start sdrip",
     status_command: "sudo systemctl status sdrip",
