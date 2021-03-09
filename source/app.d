@@ -61,9 +61,10 @@ auto setupMqtt(immutable(Prefs) prefs, Tid renderer)
 
     auto mqttSettings = Settings();
     mqttSettings.clientId = "sdrip";
-    mqttSettings.reconnect = 1.seconds;
+    mqttSettings.reconnect = 10.seconds;
     mqttSettings.host = "mqtt.beebotte.com";
     mqttSettings.userName = user;
+    mqttSettings.keepAlive = 10;
     mqttSettings.onPublish = (scope MqttClient client, in Publish packet) {
         info(packet.topic);
         if (packet.topic == topic)
@@ -89,6 +90,9 @@ auto setupMqtt(immutable(Prefs) prefs, Tid renderer)
         if (packet.returnCode != ConnectReturnCode.ConnectionAccepted)
             return;
         client.subscribe([topic], QoSLevel.QoS2);
+    };
+    mqttSettings.onDisconnect = (scope MqttClient client) {
+        writeln("Got disconnected");
     };
 
     auto mqtt = new MqttClient(mqttSettings);
