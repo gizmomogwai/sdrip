@@ -26,6 +26,13 @@ struct Apply
     }
 }
 
+struct Register
+{
+    Tid tid;
+}
+struct RendererChanged {
+    string name;
+}
 struct Activate
 {
     string profile;

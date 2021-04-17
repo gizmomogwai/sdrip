@@ -27,7 +27,7 @@ configuration "application-raspi" {
 	platforms "arm"
 	targetType "executable"
 	targetPath "out/main/raspi"
-	versions "VibeNoSSL" "VibeNoMongo"
+	versions "VibeNoSSL" "VibeNoMongo" "MqttDebug"
 }
 configuration "unittest" {
 	dependency "unit-threaded" version="~>1.0.0"

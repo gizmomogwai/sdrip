@@ -6,17 +6,11 @@ import dotstar;
 import messages;
 import prefs;
 import state;
-import std.algorithm;
-import std.array;
-import std.concurrency;
-import std.conv;
-import std.datetime;
+import std;
+import std.datetime.stopwatch;
 import std.experimental.logger;
-import std.stdio;
-import std.string;
 import timer;
 import vibe.data.json;
-import std.datetime.stopwatch;
 
 auto path(string prefix, string name)
 {
@@ -437,6 +431,8 @@ void renderloop(immutable(Prefs) settings)
             timer.shutdown();
         }
 
+        Tid[] renderListener;
+
         int renderId = 0;
         while (!finished)
         {
@@ -459,6 +455,10 @@ void renderloop(immutable(Prefs) settings)
                     currentRenderer.toggle;
                     sender.send(Toggle.Result());
                 },
+                (Tid sender, Register register) {
+                    renderListener ~= sender;
+                    writeln("renderlistener: ", renderListener.length);
+                },
                 (Tid sender, Activate activate)
                 {
                     info("rendering.activate");
@@ -476,6 +476,9 @@ void renderloop(immutable(Prefs) settings)
                         thisTid.send(Render(renderId));
                     }
                     sender.send(Activate.Result());
+                    foreach (tid; renderListener) {
+                        tid.send(thisTid, RendererChanged(activate.profile));
+                    }
                 },
                 (Tid sender, Set set)
                 {

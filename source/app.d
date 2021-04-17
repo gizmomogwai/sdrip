@@ -10,6 +10,7 @@ import std.stdio;
 import std.string;
 import std.range;
 import optional;
+import beebotte;
 
 auto routes(immutable(Prefs) prefs, Tid renderer)
 {
@@ -39,65 +40,6 @@ auto httpSettings(T)(T prefs)
 
     auto bind = prefs.get("bind").to!string;
     return new HTTPServerSettings(bind);
-}
-
-auto setupMqtt(immutable(Prefs) prefs, Tid renderer)
-{
-    import mqttd;
-    import vibe.data.json;
-    import core.time;
-
-    auto topic = prefs.get("mqtt.topic");
-    if (topic == "")
-    {
-        return oc(no!MqttClient);
-    }
-
-    auto user = prefs.get("mqtt.user");
-    if (user == "")
-    {
-        return oc(no!MqttClient);
-    }
-
-    auto mqttSettings = Settings();
-    mqttSettings.clientId = "sdrip";
-    mqttSettings.reconnect = 10.seconds;
-    mqttSettings.host = "mqtt.beebotte.com";
-    mqttSettings.userName = user;
-    mqttSettings.keepAlive = 10;
-    mqttSettings.onPublish = (scope MqttClient client, in Publish packet) {
-        info(packet.topic);
-        if (packet.topic == topic)
-        {
-            auto json = parseJsonString((cast(const char[]) packet.payload).idup);
-            auto command = json["data"].get!string.toLower;
-            info(packet.topic, ": ", json);
-            if (!command.find("toggle").empty
-                    || !command.find("on").empty || !command.find("off").empty)
-            {
-                renderer.sendReceive!Toggle;
-            }
-            else if (!command.find("activate").empty)
-            {
-                auto parts = command.split(" ");
-                {
-                    renderer.sendReceive!Activate(parts.retro.front);
-                }
-            }
-        }
-    };
-    mqttSettings.onConnAck = (scope MqttClient client, in ConnAck packet) {
-        if (packet.returnCode != ConnectReturnCode.ConnectionAccepted)
-            return;
-        client.subscribe([topic], QoSLevel.QoS2);
-    };
-    mqttSettings.onDisconnect = (scope MqttClient client) {
-        writeln("Got disconnected");
-    };
-
-    auto mqtt = new MqttClient(mqttSettings);
-    mqtt.connect();
-    return oc(some(mqtt));
 }
 
 int main(string[] args)
@@ -139,11 +81,7 @@ int main(string[] args)
         listener.stopListening;
     }
 
-    auto mqtt = setupMqtt(settings, renderer);
-    scope (exit)
-    {
-        mqtt.disconnect();
-    }
+    setupBeebotte(settings, renderer);
 
     auto status = runApplication(null);
 
