@@ -11,6 +11,7 @@ import std.string;
 import std.range;
 import optional;
 import beebotte;
+import dotstar;
 
 auto routes(immutable(Prefs) prefs, Tid renderer)
 {
@@ -44,6 +45,15 @@ auto httpSettings(T)(T prefs)
 
 int main(string[] args)
 {
+/+
+    auto strip = new SpiStrip(64);
+    for (int i=0; i<64; i++) {
+        strip.set(i, cast(ubyte) 0xff, cast(ubyte) i, cast(ubyte) 0, cast(ubyte) 0);
+    }
+    strip.refresh();
+    return 0;
++/
+
     import core.thread;
     import vibe.core.core : runApplication;
     import vibe.http.server : listenHTTP;

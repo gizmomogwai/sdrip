@@ -17,7 +17,17 @@ abstract class Strip
     ubyte[] ledBuffer;
     this(uint nrOfLeds)
     {
-        this.ledBuffer = new ubyte[nrOfLeds * 4];
+        auto bytes = (nrOfLeds+2)*4;
+        this.ledBuffer = new ubyte[bytes];
+        this.ledBuffer[0] = 0; // hardcoded start and end for apa leds strips
+        this.ledBuffer[1] = 0;
+        this.ledBuffer[2] = 0;
+        this.ledBuffer[3] = 0;
+
+        this.ledBuffer[bytes-1] = 0xff;
+        this.ledBuffer[bytes-2] = 0xff;
+        this.ledBuffer[bytes-3] = 0xff;
+        this.ledBuffer[bytes-4] = 0xff;
     }
 
     ~this()
@@ -31,7 +41,7 @@ abstract class Strip
 
     Strip set(uint idx, ubyte a, ubyte r, ubyte g, ubyte b)
     {
-        auto i = idx * 4;
+        auto i = (idx+1)* 4;
         import std.stdio;
 
         ledBuffer[i] = cast(ubyte)(0b11100000 | (a >> 3));
@@ -43,7 +53,7 @@ abstract class Strip
 
     uint size()
     {
-        return cast(uint) this.ledBuffer.length / 4;
+        return cast(uint) (this.ledBuffer.length / 4 - 2);
     }
 
     public void print()
@@ -124,7 +134,7 @@ version (linux)
 
         std.stdio.File file;
         IocTransfer[3] transfer = [
-            {speedInHz: BITRATE, bitsPerWord: 8,},
+            {speedInHz: BITRATE, bitsPerWord: 8, length: 4},
             {speedInHz: BITRATE, bitsPerWord: 8,},
             {speedInHz: BITRATE, bitsPerWord: 8,},
         ];
@@ -152,12 +162,6 @@ version (linux)
         void write(ubyte[] data)
         {
             int nrOfPixels = cast(int)(data.length / 4);
-
-            // TODO can be removed?
-            transfer[0].speedInHz = BITRATE;
-            transfer[1].speedInHz = BITRATE;
-            transfer[2].speedInHz = BITRATE;
-            //
 
             transfer[1].txBuffer = cast(ulong)(data.ptr);
             transfer[1].length = nrOfPixels * 4; // number of total bytes

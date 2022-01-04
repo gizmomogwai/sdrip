@@ -1,6 +1,5 @@
 * Installation
-** downgrade raspi kernel to sudo something 4.19 with rpi-update e1050e94821a70b2e4c72b318d6c6c968552e9a2
-
+** downgrade raspi kernel to something 4.19 with rpi-update e1050e94821a70b2e4c72b318d6c6c968552e9a2
 
 * https://beebotte.com/gizmomogwai/seehaus
 * https://beebotte.com/gizmomogwai/munich
@@ -11,3 +10,8 @@
 ** DONE use bootstrap and so on from local server
    CLOSED: [2021-01-04 Mon 16:53]
    - CLOSING NOTE [2021-01-04 Mon 16:53]
+
+
+* Funnily enough https://github.com/adafruit/Adafruit_CircuitPython_DotStar works
+  so i just have to port that .. linux settings seem to work with newest rasperry os
+  

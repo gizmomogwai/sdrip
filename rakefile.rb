@@ -1,6 +1,4 @@
 require "json"
-require "awesome_print"
-
 def rest(endpoint)
   "http://localhost:4567/api/#{endpoint}"
 end
@@ -107,7 +105,8 @@ task :build_for_raspi_with_docker do |t, args|
   uid = `id -u`.strip
   sh "mkdir -p #{out}"
 #  sh "docker run -u#{uid}:#{uid} --rm --interactive --tty --mount type=bind,src=#{Dir.pwd},dst=/ws --entrypoint=/usr/bin/bash cross-ldc:0.0.1 -c 'arm-linux-gnueabihf-gcc -c -DREAL_SPI=1 -mhard-float source/c/libdotstar.c -o #{out}/libdotstar.o && arm-linux-gnueabihf-ar rcs #{out}/libdotstar.a #{out}/libdotstar.o'"
-  sh "docker run -u#{uid}:#{uid} --rm --interactive --tty --mount type=bind,src=#{Dir.pwd},dst=/ws cross-ldc:0.0.1 -c application-raspi"
+  #  sh "docker run -u#{uid}:#{uid} --rm --interactive --tty --mount type=bind,src=#{Dir.pwd},dst=/ws --mount type=bind,src=#{Dir.pwd}/tmp,dst=/tmp cross-ldc:0.0.1 -c application-raspi"
+  sh "docker run -u#{uid}:#{uid} --rm --interactive --tty --mount type=bind,src=#{Dir.pwd},dst=/ws --mount type=bind,src=#{Dir.pwd}/tmp,dst=/tmp --entrypoint=/bin/bash cross-ldc:0.0.1"
 end
 
 desc "Build cross ldc docker image"
@@ -128,7 +127,7 @@ hosts = [
     home: "/home/osmc",
   },
   {
-    name: "seehaus-piano",
+    name: "seehaus-piano.local",
     stop_command: "systemctl --user stop sdrip",
     start_command: "systemctl --user start sdrip",
     status_command: "systemctl --user status sdrip",
@@ -149,7 +148,7 @@ hosts = [
     task name do
       on [name] do
         info "Working on #{name}"
-        execute(stop_command)
+        #execute(stop_command)
         execute("rm -rf ~/sdrip")
         execute("mkdir ~/sdrip")
         Dir.glob("source/deployment/sites/#{host}/*").each do |file|
@@ -163,7 +162,7 @@ hosts = [
         end
         upload!("out/main/raspi/sdrip", "#{home}/sdrip/")
         upload!("source/deployment/sites/#{name}/settings.yaml", "#{home}/sdrip")
-        execute(start_command)
+        #execute(start_command)
       end
     end
   end

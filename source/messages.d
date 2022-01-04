@@ -63,7 +63,7 @@ import std.traits : Fields;
 
 auto sendReceive(Request)(Tid to, Fields!Request parameters) @trusted
 {
-    to.send(thisTid, Request(parameters));
+    to.send(thisTid, cast(immutable)Request(parameters));
     Request.Result res;
     receive((Request.Result r) { res = r; });
     return res.result;

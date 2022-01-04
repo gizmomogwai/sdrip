@@ -1,7 +1,9 @@
 FROM ubuntu:20.04 AS builder
 
-ENV LDC_VERSION=1.25.1 # !!! adjust also int the cat ldc.conf line !!!
-LABEL ldc.version=${LDC_VERSION}
+# !!! adjust also int the cat ldc.conf line !!!
+ENV LDC_VERSION=1.28.0
+# !!! adjust also int the cat ldc.conf line !!!
+LABEL ldc-version=${LDC_VERSION}
 RUN \
   apt update \
   && apt install --yes cmake ninja-build curl xz-utils gnupg \
@@ -25,7 +27,7 @@ RUN \
 
 COPY ldc.conf /ldc.conf
 RUN \
-  cat /ldc.conf >> /dlang/ldc-1.25.1/etc/ldc2.conf
+  cat /ldc.conf >> /dlang/ldc-1.28.0/etc/ldc2.conf
 
 WORKDIR /ws
 ENTRYPOINT ["dub", "build", "--arch=armv6-linux-gnueabihf", "--cache=local"]
@@ -42,7 +44,7 @@ RUN \
   && apt remove gnupg xz-utils --yes \
   && apt autoremove --yes
 
-ENV LDC_VERSION=1.25.1
+ENV LDC_VERSION=1.28.0
 ENV PATH=/dlang/ldc-${LDC_VERSION}/bin:/usr/local/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf/bin:$PATH
 ENV DMD=ldmd2
 ENV DC=ldc2
@@ -56,7 +58,7 @@ COPY --from=builder /ldc-build-runtime.tmp/lib /ldc/lib
 
 COPY ldc.conf /ldc.conf
 RUN \
-  cat /ldc.conf >> /dlang/ldc-1.25.1/etc/ldc2.conf
+  cat /ldc.conf >> /dlang/ldc-1.28.0/etc/ldc2.conf
 
 env HOME=/tmp
 WORKDIR /ws

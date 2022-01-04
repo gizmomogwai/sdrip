@@ -441,14 +441,14 @@ void renderloop(immutable(Prefs) settings)
             receive(
                 (Tid sender, GetState s)
                 {
-                    auto res = Json(
+                    immutable res = Json(
                         [
                             "current": Json(["name" : Json(currentRenderer.name), "active" : Json(currentRenderer.isActive)]),
-                            "renderers": Json(renderers.map!(r => r.toJson("")).array)
+                            "renderers": Json(renderers.map!(r => r.toJson("")).array),
                         ]
                     );
 
-                    sender.send(GetState.Result(res));
+                    sender.send(cast(immutable)GetState.Result(res));
                 },
                 (Tid sender, Toggle toggle)
                 {
@@ -459,7 +459,7 @@ void renderloop(immutable(Prefs) settings)
                     renderListener ~= sender;
                     writeln("renderlistener: ", renderListener.length);
                 },
-                (Tid sender, Activate activate)
+                (Tid sender, immutable(Activate) activate)
                 {
                     info("rendering.activate");
                     auto newRenderer = renderers.find!(renderer => renderer.name == activate.profile);
