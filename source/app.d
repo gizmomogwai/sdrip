@@ -1,3 +1,4 @@
+
 import mdns;
 import messages;
 import prefs;
@@ -91,7 +92,7 @@ int main(string[] args)
         listener.stopListening;
     }
 
-    setupBeebotte(settings, renderer);
+//    setupBeebotte(settings, renderer); // disable for now
 
     auto status = runApplication(null);
 

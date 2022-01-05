@@ -11,6 +11,8 @@
    CLOSED: [2021-01-04 Mon 16:53]
    - CLOSING NOTE [2021-01-04 Mon 16:53]
 
+** TODO proper shutdown of server
+   although .. does not make sense too much, as a service would probably be restarted by systemctl
 
 * Funnily enough https://github.com/adafruit/Adafruit_CircuitPython_DotStar works
   so i just have to port that .. linux settings seem to work with newest rasperry os

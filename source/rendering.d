@@ -439,7 +439,7 @@ void renderloop(immutable(Prefs) settings)
             bool rendering = false;
             // dfmt off
             receive(
-                (Tid sender, GetState s)
+                (Tid sender, immutable(GetState) s)
                 {
                     immutable res = Json(
                         [
@@ -448,16 +448,15 @@ void renderloop(immutable(Prefs) settings)
                         ]
                     );
 
-                    sender.send(cast(immutable)GetState.Result(res));
+                    sender.send(immutable(GetState.Result)(res));
                 },
-                (Tid sender, Toggle toggle)
+                (Tid sender, immutable(Toggle) toggle)
                 {
                     currentRenderer.toggle;
-                    sender.send(Toggle.Result());
+                    sender.send(immutable(Toggle.Result)());
                 },
                 (Tid sender, Register register) {
                     renderListener ~= sender;
-                    writeln("renderlistener: ", renderListener.length);
                 },
                 (Tid sender, immutable(Activate) activate)
                 {
@@ -475,12 +474,12 @@ void renderloop(immutable(Prefs) settings)
                         renderId++;
                         thisTid.send(Render(renderId));
                     }
-                    sender.send(Activate.Result());
+                    sender.send(immutable(Activate.Result)());
                     foreach (tid; renderListener) {
                         tid.send(thisTid, RendererChanged(activate.profile));
                     }
                 },
-                (Tid sender, Set set)
+                (Tid sender, immutable(Set) set)
                 {
                     info("setting ", set);
                     // transform from string[string] to string[path]
@@ -489,12 +488,12 @@ void renderloop(immutable(Prefs) settings)
                         pathToValueMap[key.toPath] = value.to!string;
                     }
                     currentRenderer.dispatch(pathToValueMap);
-                    sender.send(set.Result(true));
+                    sender.send(immutable(set.Result)(true));
                 },
-                (Tid sender, Apply apply)
+                (Tid sender, immutable(Apply) apply)
                 {
                     currentRenderer.apply(apply.key.toPath, apply.value);
-                    sender.send(apply.Result(true));
+                    sender.send(immutable(apply.Result)(true));
                 },
                 (Render render)
                 {
