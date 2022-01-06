@@ -81,10 +81,10 @@ class WebInterface
 
     void renderCurrent()
     {
-	info("getstate");
+        info("getstate");
         auto status = renderer.sendReceive!GetState;
         auto currentName = status["current"]["name"].to!string;
-	info("currentName ", currentName);
+        info("currentName ", currentName);
         auto renderers = status["renderers"];
         import std.stdio;
 

@@ -1,4 +1,3 @@
-
 import mdns;
 import messages;
 import prefs;
@@ -46,7 +45,7 @@ auto httpSettings(T)(T prefs)
 
 int main(string[] args)
 {
-/+
+    /+
     auto strip = new SpiStrip(64);
     for (int i=0; i<64; i++) {
         strip.set(i, cast(ubyte) 0xff, cast(ubyte) i, cast(ubyte) 0, cast(ubyte) 0);
@@ -92,7 +91,7 @@ int main(string[] args)
         listener.stopListening;
     }
 
-//    setupBeebotte(settings, renderer); // disable for now
+    //    setupBeebotte(settings, renderer); // disable for now
 
     auto status = runApplication(null);
 

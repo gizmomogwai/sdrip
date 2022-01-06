@@ -37,14 +37,16 @@ auto load(T...)(T files)
         import std.file;
         import std.experimental.logger;
         import std.string;
+        import std.path;
 
-        info("loading '%s'".format(file));
+        auto h = file.absolutePath;
+        info("loading '%s'".format(h));
         if (!file.exists)
         {
-            warning("file '%s' does not exist".format(file));
+            warning("file '%s' does not exist".format(h));
             continue;
         }
-        auto data = Loader.fromFile(file).load();
+        auto data = Loader.fromFile(h).load();
         foreach (string key, string value; data)
         {
             res = res.add(key, value);

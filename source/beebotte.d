@@ -38,8 +38,8 @@ void setup(immutable(Prefs) prefs, Tid renderer)
             auto json = parseJsonString((cast(const char[]) packet.payload).idup);
             auto command = json["data"].get!string.toLower;
             info(packet.topic, ": ", json);
-            if (!command.find("toggle").empty
-                    || !command.find("on").empty || !command.find("off").empty)
+            if (!command.find("toggle").empty || !command.find("on").empty
+                    || !command.find("off").empty)
             {
                 renderer.sendReceive!Toggle;
             }
@@ -67,24 +67,25 @@ void setup(immutable(Prefs) prefs, Tid renderer)
 
     renderer.send(thisTid, Register());
     bool finished = false;
-    try {
-    while (!finished) {
-        receive(
-            (Tid sender, RendererChanged rendererChanged) {
+    try
+    {
+        while (!finished)
+        {
+            receive((Tid sender, RendererChanged rendererChanged) {
                 // adjust beebotte to local value
-                if (rendererChanged.name != currentProfile) {
+                if (rendererChanged.name != currentProfile)
+                {
                     currentProfile = rendererChanged.name;
                     // beebotte message format see: https://beebotte.com/docs/mqtt#considerations
-                    auto msg = "{\"data\":\"activate %s\", \"write\":true}".format(rendererChanged.name);
+                    auto msg = "{\"data\":\"activate %s\", \"write\":true}".format(
+                        rendererChanged.name);
                     mqtt.publish(topic, msg, QoSLevel.QoS0, true);
                 }
-            },
-            (OwnerTerminated ot) {
-                finished = true;
-            }
-        );
+            }, (OwnerTerminated ot) { finished = true; });
+        }
     }
-    } catch (Exception e) {
+    catch (Exception e)
+    {
         error(e);
     }
 }

@@ -62,8 +62,8 @@ string htmlForUByteProperty(Json p)
     string defaultValue = p["defaultValue"].to!string;
     string minValue = p["min"].to!string;
     string maxValue = p["max"].to!string;
-    return `%1$s <input type="range" class="slider" name="%1$s" value="%2$s" defaultValue="%3$s" min="%4$s" max="%5$s" />`.format(
-            name, value, defaultValue, minValue, maxValue);
+    return `%1$s <input type="range" class="slider" name="%1$s" value="%2$s" defaultValue="%3$s" min="%4$s" max="%5$s" />`
+        .format(name, value, defaultValue, minValue, maxValue);
 }
 
 string renderProperty(Json p)

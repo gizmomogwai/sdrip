@@ -30,9 +30,12 @@ struct Register
 {
     Tid tid;
 }
-struct RendererChanged {
+
+struct RendererChanged
+{
     string name;
 }
+
 struct Activate
 {
     string profile;
@@ -63,7 +66,7 @@ import std.traits : Fields;
 
 auto sendReceive(Request)(Tid to, Fields!Request parameters) @trusted
 {
-    to.send(thisTid, cast(immutable)Request(parameters));
+    to.send(thisTid, cast(immutable) Request(parameters));
     Request.Result res;
     receive((immutable(Request.Result) r) { res = r; });
     return res.result;

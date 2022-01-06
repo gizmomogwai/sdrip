@@ -99,14 +99,22 @@ task :build_for_raspi do
   sh "raspi.sh dub build --compiler=ldc-raspi"
 end
 
+def uid
+  `id -u`.strip
+end
 desc "build for raspi"
 task :build_for_raspi_with_docker do |t, args|
   out = "out/main/raspi"
-  uid = `id -u`.strip
+
   sh "mkdir -p #{out}"
 #  sh "docker run -u#{uid}:#{uid} --rm --interactive --tty --mount type=bind,src=#{Dir.pwd},dst=/ws --entrypoint=/usr/bin/bash cross-ldc:0.0.1 -c 'arm-linux-gnueabihf-gcc -c -DREAL_SPI=1 -mhard-float source/c/libdotstar.c -o #{out}/libdotstar.o && arm-linux-gnueabihf-ar rcs #{out}/libdotstar.a #{out}/libdotstar.o'"
   sh "docker run -u#{uid}:#{uid} --rm --interactive --tty --mount type=bind,src=#{Dir.pwd},dst=/ws --mount type=bind,src=#{Dir.pwd}/tmp,dst=/tmp cross-ldc:0.0.1 -c application-raspi"
   #sh "docker run -u#{uid}:#{uid} --rm --interactive --tty --mount type=bind,src=#{Dir.pwd},dst=/ws --mount type=bind,src=#{Dir.pwd}/tmp,dst=/tmp --entrypoint=/bin/bash cross-ldc:0.0.1"
+end
+
+desc "run docker image"
+task :docker_run do
+  sh "docker run -u#{uid}:#{uid} --rm --interactive --tty --mount type=bind,src=#{Dir.pwd},dst=/ws --mount type=bind,src=#{Dir.pwd}/tmp,dst=/tmp --entrypoint=bash cross-ldc:0.0.1"
 end
 
 desc "Build cross ldc docker image"
